@@ -31,7 +31,8 @@ final class HomeCoordinator: Coordinator {
                 id: event.id,
                 name: event.name,
                 date: event.date,
-                participantCount: event.participantCount
+                participantCount: event.participantCount,
+                isDrawn: event.isDrawn
             )
             let detailDependencies = EventDetailDependencies(event: detailEvent)
             return AnyView(EventDetailCoordinator(dependencies: detailDependencies).start())

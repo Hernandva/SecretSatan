@@ -238,6 +238,7 @@ struct ParticipantDetailView: View {
     }
 
     /// Header with its "Añadir" button and the rows of `members`, or a line saying the list is empty.
+    /// Once the event is drawn, without "Añadir" and without swipe to delete.
     private func section(
         _ texts: ListSection,
         members: [ParticipantDetailViewData.Member],
@@ -248,9 +249,11 @@ struct ParticipantDetailView: View {
             HStack(spacing: DSSpacing.space3) {
                 DSSectionHeader().localized(texts.titleKey)
                 Spacer(minLength: 0)
-                DSTextButton(icon: "plus", action: addAction)
-                    .localized("participantDetail.add")
-                    .accessibilityLabel(Text(forKey: texts.addLabelKey, value: "Add"))
+                if viewModel.canChangeLists {
+                    DSTextButton(icon: "plus", action: addAction)
+                        .localized("participantDetail.add")
+                        .accessibilityLabel(Text(forKey: texts.addLabelKey, value: "Add"))
+                }
             }
             if members.isEmpty {
                 DSText(style: .body, color: DSColor.textSecondary)
@@ -259,8 +262,12 @@ struct ParticipantDetailView: View {
             } else {
                 DSListGroup(separatorInset: DSListRow.iconSeparatorInset) {
                     ForEach(members) { member in
-                        DSListRow(member.name, initials: member.initials)
-                            .dsSwipeToDelete(texts.deleteLabel) { deleteAction(member) }
+                        if viewModel.canChangeLists {
+                            DSListRow(member.name, initials: member.initials)
+                                .dsSwipeToDelete(texts.deleteLabel) { deleteAction(member) }
+                        } else {
+                            DSListRow(member.name, initials: member.initials)
+                        }
                     }
                 }
             }
@@ -312,7 +319,7 @@ private struct ListSection {
     )
     NavigationStack {
         ParticipantDetailCoordinator(
-            dependencies: ParticipantDetailDependencies(eventId: "preview", participant: participant)
+            dependencies: ParticipantDetailDependencies(eventId: "preview", participant: participant, isDrawn: false)
         ).start()
     }
 }

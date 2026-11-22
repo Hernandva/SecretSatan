@@ -45,3 +45,11 @@ public protocol EventExclusionResponseProtocol: Sendable {
     var giverId: String { get }
     var receiverId: String { get }
 }
+
+/// Public result of `POST /events/:id/draw`. It never says who gives to whom, only how many assignments were made.
+public protocol EventDrawResponseProtocol: Sendable {
+    /// Stage of the event after the draw: `EventStatus.drawn`.
+    var status: EventStatus { get }
+    /// Number of assignments the draw created, one per participant.
+    var assignments: Int { get }
+}

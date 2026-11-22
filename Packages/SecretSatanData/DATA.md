@@ -75,8 +75,9 @@ public static let configuration = RepositoryConfiguration(
 
 Public API: the generator writes `fetch(_ request:serviceName:) async throws -> any <Name>ResponseProtocol`. When the
 services return different shapes, replace it with one typed function per endpoint (as `Events` does:
-`fetchEvents()`, `createEvent(_:)`, `fetchEvent(id:)`, `updateEvent(id:_:)`, `deleteEvent(id:)`). A path with an
-id, such as `events/:id`, declares only `events` in `serviceNames` and appends the id to its URL.
+`fetchEvents()`, `createEvent(_:)`, `fetchEvent(id:)`, `updateEvent(id:_:)`, `deleteEvent(id:)`, `drawEvent(id:)`).
+A path with an id, such as `events/:id` or `events/:id/draw`, declares only `events` in `serviceNames` and appends
+the id, and any action after it, to its URL.
 
 A `PATCH` sends only what changes. When a field can also be cleared with `null` (as the date of
 `updateEvent(id:_:)`), an optional can't tell "keep it" from "remove it": give it its own enum

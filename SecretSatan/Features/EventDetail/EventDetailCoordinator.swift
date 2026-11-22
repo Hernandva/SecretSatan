@@ -6,8 +6,9 @@ import SwiftUI
 final class EventDetailCoordinator: Coordinator {
     /// One case per feature that can be opened from EventDetail.
     enum Route: Hashable {
-        /// Detail of the participant selected in the list.
-        case participantDetail(EventDetailViewData.Participant)
+        /// Detail of the participant selected in the list. `isDrawn` is `true` once the event is drawn, so its
+        /// wards and exclusions can't change.
+        case participantDetail(EventDetailViewData.Participant, isDrawn: Bool)
         // @codegen:routes
     }
 
@@ -26,11 +27,12 @@ final class EventDetailCoordinator: Coordinator {
 
     func destination(for route: Route) -> AnyView {
         switch route {
-        case .participantDetail(let participant):
+        case .participantDetail(let participant, let isDrawn):
             let detailParticipant = Self.detailParticipant(from: participant)
             let detailDependencies = ParticipantDetailDependencies(
                 eventId: dependencies.resolveEvent().id,
-                participant: detailParticipant
+                participant: detailParticipant,
+                isDrawn: isDrawn
             )
             return AnyView(ParticipantDetailCoordinator(dependencies: detailDependencies).start())
         // @codegen:destinations

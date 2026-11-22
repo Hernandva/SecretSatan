@@ -30,7 +30,8 @@ private extension EventsUseCase {
             id: response.id,
             name: response.name,
             date: response.date,
-            participantCount: response.participantCount
+            participantCount: response.participantCount,
+            isDrawn: response.status == .drawn
         )
     }
 }

@@ -27,6 +27,11 @@ struct EventDetailView: View {
                 DSText(style: .footnote, color: DSColor.destructive).localized("eventDetail.error")
             }
         }
+        .dsBottomBar {
+            if viewModel.state == .loaded {
+                drawBar
+            }
+        }
         .sheet(item: $viewModel.sheet) { sheet in
             switch sheet {
             case .editName: nameSheet
@@ -43,7 +48,59 @@ struct EventDetailView: View {
                 Text(reason)
             }
         }
+        .alert(
+            Text(forKey: "eventDetail.draw.confirm.title", value: "Draw names?"),
+            isPresented: $viewModel.drawConfirmationShown
+        ) {
+            Button(role: .cancel) {
+            } label: {
+                Text(forKey: "eventDetail.draw.confirm.cancel", value: "Cancel")
+            }
+            Button {
+                Task { await viewModel.draw() }
+            } label: {
+                Text(forKey: "eventDetail.draw", value: "Draw names")
+            }
+        } message: {
+            Text(
+                forKey: "eventDetail.draw.confirm.message",
+                value: "Once the names are drawn, the draw can't be undone."
+            )
+        }
+        .alert(
+            Text(forKey: "eventDetail.draw.error", value: "Couldn't make the draw."),
+            isPresented: $viewModel.drawFailed
+        ) {
+        } message: {
+            if let reason = viewModel.drawFailureReason {
+                Text(reason)
+            }
+        }
         .task { await viewModel.load() }
+    }
+
+    /// "Sortear", active from `minimumParticipantsToDraw` participants, with a line saying how many are missing.
+    /// Once the event is drawn, only a line saying so, with the number of assignments when it was drawn here.
+    @ViewBuilder
+    private var drawBar: some View {
+        if viewModel.isDrawn {
+            if let draw = viewModel.viewData.draw {
+                DSText(String(localized: "eventDetail.draw.done \(draw.assignments)"), style: .footnote)
+            } else {
+                DSText(style: .footnote).localized("eventDetail.draw.alreadyDone")
+            }
+        } else {
+            if !viewModel.hasEnoughParticipantsToDraw {
+                DSText(
+                    String(localized: "eventDetail.draw.notEnough \(EventDetailViewModel.minimumParticipantsToDraw)"),
+                    style: .footnote,
+                    color: DSColor.textSecondary
+                )
+            }
+            DSButton(icon: .symbol("shuffle")) { viewModel.startDrawing() }
+                .localized("eventDetail.draw")
+                .disabled(!viewModel.canDraw)
+        }
     }
 
     /// Name of the event and, below it, its date ("24 de diciembre de 2026"), each with its edit button.
@@ -77,9 +134,11 @@ struct EventDetailView: View {
             HStack(spacing: DSSpacing.space3) {
                 DSSectionHeader().localized("eventDetail.participants")
                 Spacer(minLength: 0)
-                DSTextButton(icon: "plus", action: viewModel.startAddingParticipant)
-                    .localized("eventDetail.add")
-                    .accessibilityLabel(Text(forKey: "eventDetail.addParticipant", value: "Add participant"))
+                if viewModel.canChangeParticipants {
+                    DSTextButton(icon: "plus", action: viewModel.startAddingParticipant)
+                        .localized("eventDetail.add")
+                        .accessibilityLabel(Text(forKey: "eventDetail.addParticipant", value: "Add participant"))
+                }
             }
             if viewModel.viewData.participants.isEmpty {
                 DSText(style: .body, color: DSColor.textSecondary)
@@ -88,17 +147,27 @@ struct EventDetailView: View {
             } else {
                 DSListGroup(separatorInset: DSListRow.iconSeparatorInset) {
                     ForEach(viewModel.viewData.participants) { participant in
-                        NavigationLink(value: EventDetailCoordinator.Route.participantDetail(participant)) {
-                            DSListRow(participant.name, initials: participant.initials, showsChevron: true)
-                        }
-                        .buttonStyle(.plain)
-                        .dsSwipeToDelete(String(localized: "eventDetail.participant.delete")) {
-                            Task { await viewModel.deleteParticipant(participant) }
+                        if viewModel.canChangeParticipants {
+                            participantRow(participant)
+                                .dsSwipeToDelete(String(localized: "eventDetail.participant.delete")) {
+                                    Task { await viewModel.deleteParticipant(participant) }
+                                }
+                        } else {
+                            participantRow(participant)
                         }
                     }
                 }
             }
         }
+    }
+
+    /// Row that opens the participant's detail.
+    private func participantRow(_ participant: EventDetailViewData.Participant) -> some View {
+        let route = EventDetailCoordinator.Route.participantDetail(participant, isDrawn: viewModel.isDrawn)
+        return NavigationLink(value: route) {
+            DSListRow(participant.name, initials: participant.initials, showsChevron: true)
+        }
+        .buttonStyle(.plain)
     }
 
     /// Sheet with the current name. "Guardar" turns active once the name changes.
@@ -186,7 +255,13 @@ struct EventDetailView: View {
 }
 
 #Preview {
-    let event = EventDetailViewData.Event(id: "preview", name: "Family 2026", date: .now, participantCount: 6)
+    let event = EventDetailViewData.Event(
+        id: "preview",
+        name: "Family 2026",
+        date: .now,
+        participantCount: 6,
+        isDrawn: false
+    )
     NavigationStack {
         EventDetailCoordinator(dependencies: EventDetailDependencies(event: event)).start()
     }

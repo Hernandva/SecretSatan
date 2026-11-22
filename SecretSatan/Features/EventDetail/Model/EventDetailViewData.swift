@@ -10,6 +10,8 @@ struct EventDetailViewData: Equatable, Sendable {
         /// Day of the event, or `nil` when it has none.
         let date: Date?
         let participantCount: Int
+        /// `true` once the draw has been made.
+        let isDrawn: Bool
     }
 
     /// One row of the participant list, returned by `EventParticipantsUseCase`.
@@ -34,8 +36,16 @@ struct EventDetailViewData: Equatable, Sendable {
         }
     }
 
+    /// Result of the draw made on this screen, returned by `DrawEventUseCase`.
+    struct Draw: Equatable, Sendable {
+        /// Number of assignments the draw created. Who gives to whom is never shown.
+        let assignments: Int
+    }
+
     /// Result of `EventDetailUseCase`, or `nil` until it loads.
     var event: Event?
     /// Participants of the event, returned by `EventParticipantsUseCase`.
     var participants: [Participant] = []
+    /// Result of `DrawEventUseCase`, or `nil` until the draw is made on this screen.
+    var draw: Draw?
 }

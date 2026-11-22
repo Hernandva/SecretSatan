@@ -16,6 +16,8 @@ struct HomeViewData: Equatable, Sendable {
         /// Day of the event, or `nil` when it has none.
         let date: Date?
         let participantCount: Int
+        /// `true` once the draw has been made.
+        let isDrawn: Bool
     }
 
     /// User of the saved session, or `nil` until it loads or when there is no valid session.

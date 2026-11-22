@@ -47,4 +47,7 @@ struct ParticipantDetailViewData: Equatable, Sendable {
     var exclusions: [Member] = []
     /// Participants offered in the "Nueva exclusión" sheet. Returned by `ExclusionCandidatesUseCase`.
     var exclusionCandidates: [Member] = []
+    /// `true` when the event has been drawn, returned by `ParticipantDetailUseCase`: wards and exclusions can't
+    /// be added or removed.
+    var isDrawn = false
 }

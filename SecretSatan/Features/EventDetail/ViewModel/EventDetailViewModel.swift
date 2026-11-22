@@ -39,9 +39,19 @@ final class EventDetailViewModel {
         case failed(reason: String?)
     }
 
+    /// State of the draw started with "Sortear".
+    enum DrawState: Equatable {
+        case idle
+        case drawing
+    }
+
+    /// Fewest participants an event needs before it can be drawn.
+    static let minimumParticipantsToDraw = 3
+
     private(set) var state: State = .idle
     private(set) var editState: EditState = .idle
     private(set) var addParticipantState: AddParticipantState = .idle
+    private(set) var drawState: DrawState = .idle
     /// Data of the screen. Each use case result updates only its own field.
     private(set) var viewData = EventDetailViewData()
 
@@ -60,12 +70,19 @@ final class EventDetailViewModel {
     var deleteFailed = false
     /// The backend's message when it refused to remove the participant, or `nil` for any other failure.
     private(set) var deleteFailureReason: String?
+    /// `true` while the view asks to confirm the draw, which can't be undone. The view sets it back to `false`.
+    var drawConfirmationShown = false
+    /// `true` after the draw fails, so the view shows an alert. The view sets it back to `false`.
+    var drawFailed = false
+    /// The backend's message when it refused the draw, or `nil` for any other failure.
+    private(set) var drawFailureReason: String?
 
     private let useCase: any EventDetailUseCaseProtocol
     private let participantsUseCase: any EventParticipantsUseCaseProtocol
     private let editEventUseCase: any EditEventUseCaseProtocol
     private let newParticipantUseCase: any NewParticipantUseCaseProtocol
     private let deleteParticipantUseCase: any DeleteParticipantUseCaseProtocol
+    private let drawEventUseCase: any DrawEventUseCaseProtocol
 
     /// Receives only the container and resolves what it needs from it.
     init(dependencies: EventDetailDependencies) {
@@ -74,6 +91,7 @@ final class EventDetailViewModel {
         self.editEventUseCase = dependencies.resolveEditEventUseCase()
         self.newParticipantUseCase = dependencies.resolveNewParticipantUseCase()
         self.deleteParticipantUseCase = dependencies.resolveDeleteParticipantUseCase()
+        self.drawEventUseCase = dependencies.resolveDrawEventUseCase()
     }
 
     /// Shows the event passed in by Home right away, then loads its participants.
@@ -136,8 +154,13 @@ final class EventDetailViewModel {
 
     // MARK: - New participant
 
+    /// `true` until the event is drawn: after the draw, participants can't be added or removed.
+    var canChangeParticipants: Bool {
+        !isDrawn
+    }
+
     func startAddingParticipant() {
-        guard sheet == nil else { return }
+        guard sheet == nil, canChangeParticipants else { return }
         participantName = ""
         participantPhone = ""
         addParticipantState = .idle
@@ -146,7 +169,7 @@ final class EventDetailViewModel {
 
     /// `true` when the name and the phone are filled in and nothing is being saved.
     var canSaveParticipant: Bool {
-        newParticipantInput != nil && addParticipantState != .saving
+        canChangeParticipants && newParticipantInput != nil && addParticipantState != .saving
     }
 
     /// Adds the participant, appends it to the list and closes the sheet.
@@ -167,9 +190,9 @@ final class EventDetailViewModel {
     // MARK: - Delete participant
 
     /// Removes the participant from the list at once and from the event on the backend. If that fails, the
-    /// participant goes back to its place and `deleteFailed` turns on.
+    /// participant goes back to its place and `deleteFailed` turns on. Does nothing once the event is drawn.
     func deleteParticipant(_ participant: EventDetailViewData.Participant) async {
-        guard let index = viewData.participants.firstIndex(of: participant) else { return }
+        guard canChangeParticipants, let index = viewData.participants.firstIndex(of: participant) else { return }
         viewData.participants.remove(at: index)
         do {
             try await deleteParticipantUseCase.execute(id: participant.id)
@@ -182,6 +205,46 @@ final class EventDetailViewModel {
             }
             deleteFailed = true
         }
+    }
+
+    // MARK: - Draw
+
+    /// `true` when the event came from Home already drawn or it has just been drawn here.
+    var isDrawn: Bool {
+        viewData.event?.isDrawn == true || viewData.draw != nil
+    }
+
+    /// `true` when the event has at least `minimumParticipantsToDraw` participants.
+    var hasEnoughParticipantsToDraw: Bool {
+        viewData.participants.count >= Self.minimumParticipantsToDraw
+    }
+
+    /// `true` when the event is not drawn yet, has enough participants and no draw is running.
+    var canDraw: Bool {
+        !isDrawn && hasEnoughParticipantsToDraw && drawState != .drawing
+    }
+
+    /// "Sortear": asks to confirm the draw before making it.
+    func startDrawing() {
+        guard canDraw else { return }
+        drawConfirmationShown = true
+    }
+
+    /// Draws the event, once confirmed, and keeps the result in `viewData.draw`. If it fails, `drawFailed` turns on.
+    func draw() async {
+        guard canDraw else { return }
+        drawState = .drawing
+        do {
+            viewData.draw = try await drawEventUseCase.execute()
+        } catch {
+            if case DrawEventError.rejected(let reason) = error {
+                drawFailureReason = reason
+            } else {
+                drawFailureReason = nil
+            }
+            drawFailed = true
+        }
+        drawState = .idle
     }
 
     // MARK: - Private

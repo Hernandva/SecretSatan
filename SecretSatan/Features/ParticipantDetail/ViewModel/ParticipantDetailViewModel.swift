@@ -90,6 +90,10 @@ final class ParticipantDetailViewModel {
     var draftPhone = ""
     /// Name typed in the "Nuevo protegido" sheet. Required.
     var wardName = ""
+    /// `false` once the event is drawn: wards and exclusions can't be added or removed.
+    var canChangeLists: Bool {
+        !viewData.isDrawn
+    }
 
     private let useCase: any ParticipantDetailUseCaseProtocol
     private let wardsUseCase: any ParticipantWardsUseCaseProtocol
@@ -118,6 +122,7 @@ final class ParticipantDetailViewModel {
     /// its wards at the same time.
     func load() async {
         state = .loading
+        viewData.isDrawn = useCase.executeIsDrawn()
         do {
             let participant = try await useCase.execute()
             viewData.participant = participant
@@ -185,7 +190,7 @@ final class ParticipantDetailViewModel {
 
     /// "Añadir" in "Protegidos": opens the "Nuevo protegido" sheet with an empty name.
     func startAddingWard() {
-        guard sheet == nil else { return }
+        guard sheet == nil, canChangeLists else { return }
         wardName = ""
         addWardState = .idle
         sheet = .newWard
@@ -193,7 +198,7 @@ final class ParticipantDetailViewModel {
 
     /// `true` when the name is filled in and nothing is being saved.
     var canSaveWard: Bool {
-        Self.trimmed(wardName) != nil && addWardState != .saving
+        canChangeLists && Self.trimmed(wardName) != nil && addWardState != .saving
     }
 
     /// Adds the ward, appends it to "Protegidos" and closes the sheet.
@@ -216,7 +221,7 @@ final class ParticipantDetailViewModel {
     /// "Añadir" in "Exclusiones": opens the "Nueva exclusión" sheet, which loads its list with
     /// `loadExclusionCandidates()`.
     func startAddingExclusion() {
-        guard sheet == nil else { return }
+        guard sheet == nil, canChangeLists else { return }
         viewData.exclusionCandidates = []
         candidatesState = .idle
         addExclusionState = .idle
@@ -246,7 +251,7 @@ final class ParticipantDetailViewModel {
     /// Saves the exclusion with the participant picked in the "Nueva exclusión" sheet, adds it to "Exclusiones"
     /// and closes the sheet. Ignored while another one is being saved.
     func selectExclusionCandidate(_ candidate: ParticipantDetailViewData.Member) async {
-        guard addExclusionState != .saving else { return }
+        guard canChangeLists, addExclusionState != .saving else { return }
         addExclusionState = .saving
         do {
             try await addExclusionUseCase.execute(receiverId: candidate.id)
@@ -322,7 +327,7 @@ extension ParticipantDetailViewModel {
         from list: WritableKeyPath<ParticipantDetailViewData, [ParticipantDetailViewData.Member]>,
         delete: () async -> DeleteFailure?
     ) async {
-        guard let index = viewData[keyPath: list].firstIndex(of: member) else { return }
+        guard canChangeLists, let index = viewData[keyPath: list].firstIndex(of: member) else { return }
         viewData[keyPath: list].remove(at: index)
         if let failure = await delete() {
             viewData[keyPath: list].insert(member, at: min(index, viewData[keyPath: list].count))

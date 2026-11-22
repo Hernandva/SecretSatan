@@ -9,6 +9,8 @@ final class ParticipantDetailDependencies {
     private let eventId: String
     /// Participant selected in the list of EventDetail, passed in by the route.
     private let participant: ParticipantDetailViewData.Participant
+    /// `true` when the event has been drawn: wards and exclusions can't be added or removed.
+    private let isDrawn: Bool
     private let repository: any ParticipantsRepositoryProtocol
     /// Reads the participants of the event, for the "Nueva exclusión" sheet.
     private let eventsRepository: any EventsRepositoryProtocol
@@ -18,12 +20,14 @@ final class ParticipantDetailDependencies {
     init(
         eventId: String,
         participant: ParticipantDetailViewData.Participant,
+        isDrawn: Bool,
         repository: any ParticipantsRepositoryProtocol = ParticipantsRepository(),
         eventsRepository: any EventsRepositoryProtocol = EventsRepository(),
         exclusionsRepository: any ExclusionsRepositoryProtocol = ExclusionsRepository()
     ) {
         self.eventId = eventId
         self.participant = participant
+        self.isDrawn = isDrawn
         self.repository = repository
         self.eventsRepository = eventsRepository
         self.exclusionsRepository = exclusionsRepository
@@ -35,6 +39,10 @@ final class ParticipantDetailDependencies {
 
     func resolveParticipant() -> ParticipantDetailViewData.Participant {
         participant
+    }
+
+    func resolveIsDrawn() -> Bool {
+        isDrawn
     }
 
     func resolveRepository() -> any ParticipantsRepositoryProtocol {

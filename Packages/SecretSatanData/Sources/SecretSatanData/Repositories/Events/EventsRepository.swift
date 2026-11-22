@@ -27,15 +27,22 @@ public protocol EventsRepositoryProtocol: Sendable {
 
     /// `DELETE /events/:id`: deletes the event and everything that belongs to it.
     func deleteEvent(id: String) async throws
+
+    /// `POST /events/:id/draw`: draws the event, which becomes `EventStatus.drawn`, and returns how many assignments
+    /// it created. It never returns who gives to whom.
+    @discardableResult
+    func drawEvent(id: String) async throws -> any EventDrawResponseProtocol
 }
 
 /// Talks to the Events services of the backend, authenticated with the session token of the Auth repository.
 /// Flow: EventsRequestProtocol / EventsUpdateRequestProtocol -> EventsRequestDAO / EventsUpdateRequestDAO
-/// -> /events -> EventsResponseDAO / EventDetailResponseDAO
-/// -> EventsResponseProtocol / EventDetailResponseProtocol.
+/// -> /events -> EventsResponseDAO / EventDetailResponseDAO / EventDrawResponseDAO
+/// -> EventsResponseProtocol / EventDetailResponseProtocol / EventDrawResponseProtocol.
 public final class EventsRepository: EventsRepositoryProtocol {
     /// `events`, and `events/:id` built from it.
     static let serviceName = "events"
+    /// Appended to `events/:id` to build `events/:id/draw`.
+    static let drawPath = "draw"
 
     /// Services of the backend, on the base URL of the app's Info.plist (`API_BASE_URL` in Config.xcconfig).
     public static let configuration = RepositoryConfiguration(
@@ -118,6 +125,17 @@ public final class EventsRepository: EventsRepositoryProtocol {
     public func deleteEvent(id: String) async throws {
         let url = try eventURL(id: id)
         try await client.send(url, method: .delete, headers: try await authorizationHeaders())
+    }
+
+    @discardableResult
+    public func drawEvent(id: String) async throws -> any EventDrawResponseProtocol {
+        let url = try eventURL(id: id).appendingPathComponent(Self.drawPath)
+        let draw: EventDrawResponseDAO = try await client.request(
+            url,
+            method: .post,
+            headers: try await authorizationHeaders()
+        )
+        return draw
     }
 
     /// `events/:id`.

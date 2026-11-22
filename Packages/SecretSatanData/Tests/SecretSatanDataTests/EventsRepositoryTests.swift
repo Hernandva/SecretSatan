@@ -221,6 +221,30 @@ struct EventsRepositoryTests {
         #expect(sent.url?.absoluteString == "https://backend.test/events/E1")
     }
 
+    @Test func drawsAnEventWithoutABody() async throws {
+        Self.stub(status: 200, body: #"{"status":"drawn","assignments":5}"#)
+
+        let draw = try await Self.repository().drawEvent(id: "E1")
+
+        #expect(draw.status == .drawn)
+        #expect(draw.assignments == 5)
+        let sent = try #require(EventsStubURLProtocol.lastRequest)
+        #expect(sent.httpMethod == "POST")
+        #expect(sent.url?.absoluteString == "https://backend.test/events/E1/draw")
+        #expect(sent.value(forHTTPHeaderField: "Authorization") == "Bearer session-token")
+        #expect(EventsStubURLProtocol.lastBody?.isEmpty ?? true)
+    }
+
+    @Test func throwsTheReasonOfTheBackendOnDraw() async {
+        Self.stub(status: 409, body: #"{"error":true,"reason":"The event has already been drawn."}"#)
+
+        await #expect(
+            throws: NetworkError.server(statusCode: 409, reason: "The event has already been drawn.")
+        ) {
+            try await Self.repository().drawEvent(id: "E1")
+        }
+    }
+
     @Test func throwsTheReasonOfTheBackend() async {
         Self.stub(status: 404, body: #"{"error":true,"reason":"Not Found"}"#)
 
