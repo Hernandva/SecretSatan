@@ -18,6 +18,18 @@ struct EventDetailViewData: Equatable, Sendable {
         let name: String
         /// Up to two letters shown on the avatar, e.g. "LM" for "Lucía Martín".
         let initials: String
+
+        /// Builds the initials from the first letter of the first two words of `name`:
+        /// "Lucía Martín" -> "LM", "Pablo" -> "P".
+        init(id: String, name: String) {
+            self.id = id
+            self.name = name
+            self.initials = name.split(separator: " ")
+                .prefix(2)
+                .compactMap(\.first)
+                .map { String($0).uppercased() }
+                .joined()
+        }
     }
 
     /// Result of `EventDetailUseCase`, or `nil` until it loads.

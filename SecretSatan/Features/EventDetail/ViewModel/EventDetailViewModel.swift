@@ -19,8 +19,17 @@ final class EventDetailViewModel {
         case failed(String)
     }
 
+    /// State of the participant being saved from the "Nuevo participante" sheet.
+    enum AddParticipantState: Equatable {
+        case idle
+        case saving
+        /// `reason` is the backend's message when it refused the participant, or `nil` for any other failure.
+        case failed(reason: String?)
+    }
+
     private(set) var state: State = .idle
     private(set) var editState: EditState = .idle
+    private(set) var addParticipantState: AddParticipantState = .idle
     /// Data of the screen. Each use case result updates only its own field.
     private(set) var viewData = EventDetailViewData()
 
@@ -32,16 +41,24 @@ final class EventDetailViewModel {
     var isEditingDate = false
     /// Date chosen in the picker. Starts as the current date, or today when the event has none.
     var draftDate = Date()
+    /// `true` while the "Nuevo participante" sheet is shown.
+    var isAddingParticipant = false
+    /// Name typed in the "Nuevo participante" sheet. Required.
+    var participantName = ""
+    /// Phone typed in the "Nuevo participante" sheet. Optional.
+    var participantPhone = ""
 
     private let useCase: any EventDetailUseCaseProtocol
     private let participantsUseCase: any EventParticipantsUseCaseProtocol
     private let editEventUseCase: any EditEventUseCaseProtocol
+    private let newParticipantUseCase: any NewParticipantUseCaseProtocol
 
     /// Receives only the container and resolves what it needs from it.
     init(dependencies: EventDetailDependencies) {
         self.useCase = dependencies.resolveUseCase()
         self.participantsUseCase = dependencies.resolveParticipantsUseCase()
         self.editEventUseCase = dependencies.resolveEditEventUseCase()
+        self.newParticipantUseCase = dependencies.resolveNewParticipantUseCase()
     }
 
     /// Shows the event passed in by Home right away, then loads its participants.
@@ -96,12 +113,47 @@ final class EventDetailViewModel {
         }
     }
 
+    // MARK: - New participant
+
+    func startAddingParticipant() {
+        participantName = ""
+        participantPhone = ""
+        addParticipantState = .idle
+        isAddingParticipant = true
+    }
+
+    /// `true` when the name is filled in and nothing is being saved.
+    var canSaveParticipant: Bool {
+        Self.trimmed(participantName) != nil && addParticipantState != .saving
+    }
+
+    /// Adds the participant, appends it to the list and closes the sheet.
+    func saveParticipant() async {
+        guard canSaveParticipant, let name = Self.trimmed(participantName) else { return }
+        addParticipantState = .saving
+        do {
+            let input = NewParticipantInput(name: name, phone: Self.trimmed(participantPhone))
+            viewData.participants.append(try await newParticipantUseCase.execute(input))
+            addParticipantState = .idle
+            isAddingParticipant = false
+        } catch NewParticipantError.rejected(let reason) {
+            addParticipantState = .failed(reason: reason)
+        } catch {
+            addParticipantState = .failed(reason: nil)
+        }
+    }
+
     // MARK: - Private
+
+    /// `text` without surrounding spaces, or `nil` when it is empty.
+    private static func trimmed(_ text: String) -> String? {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? nil : trimmed
+    }
 
     /// The typed name without surrounding spaces, or `nil` when it is empty.
     private var trimmedDraftName: String? {
-        let trimmed = draftName.trimmingCharacters(in: .whitespacesAndNewlines)
-        return trimmed.isEmpty ? nil : trimmed
+        Self.trimmed(draftName)
     }
 
     /// Saves the change and puts the updated event in `viewData.event`. Returns `false` when it fails.

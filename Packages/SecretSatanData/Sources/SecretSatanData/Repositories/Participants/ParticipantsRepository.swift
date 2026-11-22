@@ -18,7 +18,8 @@ public protocol ParticipantsRepositoryProtocol: Sendable {
     ) async throws -> any ParticipantsResponseProtocol
 
     /// `PUT /events/:id/participants/:pid`: replaces every field of the participant and returns it.
-    /// A field left `nil` is cleared. Allowed after the draw too, e.g. to fix a phone.
+    /// A field left `nil` is cleared, and so is the participant's `family`, which this repository never sends.
+    /// Allowed after the draw too, e.g. to fix a phone.
     @discardableResult
     func updateParticipant(
         eventId: String,

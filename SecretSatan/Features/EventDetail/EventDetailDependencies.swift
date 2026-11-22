@@ -8,13 +8,16 @@ final class EventDetailDependencies {
     /// Event selected in the list of Home, passed in by the route.
     private let event: EventDetailViewData.Event
     private let repository: any EventsRepositoryProtocol
+    private let participantsRepository: any ParticipantsRepositoryProtocol
 
     init(
         event: EventDetailViewData.Event,
-        repository: any EventsRepositoryProtocol = EventsRepository()
+        repository: any EventsRepositoryProtocol = EventsRepository(),
+        participantsRepository: any ParticipantsRepositoryProtocol = ParticipantsRepository()
     ) {
         self.event = event
         self.repository = repository
+        self.participantsRepository = participantsRepository
     }
 
     func resolveEvent() -> EventDetailViewData.Event {
@@ -23,6 +26,10 @@ final class EventDetailDependencies {
 
     func resolveRepository() -> any EventsRepositoryProtocol {
         repository
+    }
+
+    func resolveParticipantsRepository() -> any ParticipantsRepositoryProtocol {
+        participantsRepository
     }
 
     func resolveUseCase() -> any EventDetailUseCaseProtocol {
@@ -35,6 +42,10 @@ final class EventDetailDependencies {
 
     func resolveEditEventUseCase() -> any EditEventUseCaseProtocol {
         EditEventUseCase(dependencies: self)
+    }
+
+    func resolveNewParticipantUseCase() -> any NewParticipantUseCaseProtocol {
+        NewParticipantUseCase(dependencies: self)
     }
 
     func resolveViewModel() -> EventDetailViewModel {

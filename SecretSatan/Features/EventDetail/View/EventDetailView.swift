@@ -2,7 +2,7 @@ import SecretSatanUI
 import SwiftUI
 
 /// "Evento": the name and date of the event selected in Home, with a button to edit each, its participants and
-/// the button to add one.
+/// the button that opens the "Nuevo participante" sheet.
 struct EventDetailView: View {
     @State private var viewModel: EventDetailViewModel
 
@@ -29,13 +29,13 @@ struct EventDetailView: View {
         }
         .dsBottomBar {
             if viewModel.state == .loaded {
-                // Not wired yet: the Events repository has no service to add a participant.
-                DSButton(icon: .symbol("plus")) {}
+                DSButton(icon: .symbol("plus")) { viewModel.startAddingParticipant() }
                     .localized("eventDetail.addParticipant")
             }
         }
         .sheet(isPresented: $viewModel.isEditingName) { nameSheet }
         .sheet(isPresented: $viewModel.isEditingDate) { dateSheet }
+        .sheet(isPresented: $viewModel.isAddingParticipant) { participantSheet }
         .task { await viewModel.load() }
     }
 
@@ -120,6 +120,40 @@ struct EventDetailView: View {
         }
         .sheetLayout(isSaving: viewModel.editState == .saving)
         .presentationDetents([.large])
+    }
+
+    /// "Nuevo participante" sheet: name (required) and phone (optional). "Guardar" turns active once the name is
+    /// filled in, adds the participant and closes the sheet.
+    private var participantSheet: some View {
+        VStack(alignment: .leading, spacing: DSSpacing.medium) {
+            DSText(style: .title).localized("eventDetail.newParticipant.title")
+
+            DSTextField(value: $viewModel.participantName)
+                .localized("eventDetail.newParticipant.name")
+                .textContentType(.name)
+                .submitLabel(.next)
+
+            DSTextField(value: $viewModel.participantPhone)
+                .localized("eventDetail.newParticipant.phone")
+                .textContentType(.telephoneNumber)
+                .keyboardType(.phonePad)
+
+            if case .failed(let reason) = viewModel.addParticipantState {
+                if let reason {
+                    DSText(reason, style: .footnote, color: DSColor.destructive)
+                } else {
+                    DSText(style: .footnote, color: DSColor.destructive).localized("eventDetail.newParticipant.error")
+                }
+            }
+
+            Spacer(minLength: 0)
+
+            DSButton { Task { await viewModel.saveParticipant() } }
+                .localized("eventDetail.save")
+                .disabled(!viewModel.canSaveParticipant)
+        }
+        .sheetLayout(isSaving: viewModel.addParticipantState == .saving)
+        .presentationDetents([.medium, .large])
     }
 
     @ViewBuilder

@@ -8,7 +8,6 @@ struct ParticipantsRepositoryTests {
     private struct Request: ParticipantsRequestProtocol {
         let name: String
         var phone: String?
-        var family: String?
         var guardianId: String?
     }
 
@@ -62,7 +61,7 @@ struct ParticipantsRepositoryTests {
 
         let participant = try await Self.repository().addParticipant(
             eventId: Self.eventId,
-            Request(name: "Ana", phone: "+34600111222", family: "García")
+            Request(name: "Ana", phone: "+34600111222")
         )
 
         let sent = try #require(ParticipantsStubURLProtocol.lastRequest)
@@ -70,7 +69,7 @@ struct ParticipantsRepositoryTests {
         #expect(sent.url?.absoluteString == "https://backend.test/events/E1/participants")
         #expect(sent.value(forHTTPHeaderField: "Authorization") == "Bearer session-token")
         let body = try Self.sentBody()
-        #expect(body?.keys.sorted() == ["family", "name", "phone"])
+        #expect(body?.keys.sorted() == ["name", "phone"])
         #expect(body?["phone"] as? String == "+34600111222")
         #expect(participant.id == Self.guardianId)
         #expect(participant.guardianId == nil)
@@ -83,15 +82,14 @@ struct ParticipantsRepositoryTests {
 
         let participant = try await Self.repository().addParticipant(
             eventId: Self.eventId,
-            Request(name: "Lucía", family: "García", guardianId: Self.guardianId)
+            Request(name: "Lucía", guardianId: Self.guardianId)
         )
 
         let body = try Self.sentBody()
-        #expect(body?.keys.sorted() == ["family", "guardianId", "name"])
+        #expect(body?.keys.sorted() == ["guardianId", "name"])
         #expect(participant.id == Self.childId)
         #expect(participant.name == "Lucía")
         #expect(participant.phone == nil)
-        #expect(participant.family == "García")
         #expect(participant.guardianId == Self.guardianId)
     }
 
@@ -103,14 +101,14 @@ struct ParticipantsRepositoryTests {
         let participant = try await Self.repository().updateParticipant(
             eventId: Self.eventId,
             participantId: Self.guardianId,
-            Request(name: "Ana María", phone: "+34600999888", family: "García")
+            Request(name: "Ana María", phone: "+34600999888")
         )
 
         let sent = try #require(ParticipantsStubURLProtocol.lastRequest)
         #expect(sent.httpMethod == "PUT")
         #expect(sent.url?.absoluteString == "https://backend.test/events/E1/participants/\(Self.guardianId)")
         let body = try Self.sentBody()
-        #expect(body?.keys.sorted() == ["family", "guardianId", "name", "phone"])
+        #expect(body?.keys.sorted() == ["guardianId", "name", "phone"])
         #expect(body?["guardianId"] is NSNull)
         #expect(participant.name == "Ana María")
         #expect(participant.phone == "+34600999888")

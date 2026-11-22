@@ -148,7 +148,7 @@ adds the route to the parent coordinator and updates this file.
 |---|---|---|
 | `Login` | — (root) | — |
 | `Home` | Login | `AuthRepository`, `EventsRepository` |
-| `EventDetail` | Home | `EventsRepository` |
+| `EventDetail` | Home | `EventsRepository`, `ParticipantsRepository` |
 <!-- codegen:feature-registry:end -->
 
 ## App map
