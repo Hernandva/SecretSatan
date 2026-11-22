@@ -39,6 +39,10 @@ struct HomeView: View {
         } content: {
             NewEventView(dependencies: dependencies)
         }
+        .alert(
+            Text(forKey: "home.deleteError", value: "Couldn't delete the event."),
+            isPresented: $viewModel.deleteFailed
+        ) {}
         .task { await viewModel.load() }
     }
 
@@ -57,6 +61,9 @@ struct HomeView: View {
                         icon: "gift",
                         showsChevron: true
                     )
+                    .dsSwipeToDelete(String(localized: "home.event.delete")) {
+                        Task { await viewModel.deleteEvent(event) }
+                    }
                 }
             }
         }

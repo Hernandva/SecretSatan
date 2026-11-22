@@ -17,13 +17,31 @@ final class HomeViewModel {
     /// Data of the screen. Each use case result updates only its own field.
     private(set) var viewData = HomeViewData()
 
+    /// `true` after a delete fails, so the view shows an alert. The view sets it back to `false` when it closes.
+    var deleteFailed = false
+
     private let useCase: any HomeUseCaseProtocol
     private let eventsUseCase: any EventsUseCaseProtocol
+    private let deleteEventUseCase: any DeleteEventUseCaseProtocol
 
     /// Receives only the container and resolves what it needs from it.
     init(dependencies: HomeDependencies) {
         self.useCase = dependencies.resolveUseCase()
         self.eventsUseCase = dependencies.resolveEventsUseCase()
+        self.deleteEventUseCase = dependencies.resolveDeleteEventUseCase()
+    }
+
+    /// Removes the event from the list at once and deletes it on the backend. If that fails, the event goes back to
+    /// its place and `deleteFailed` turns on.
+    func deleteEvent(_ event: HomeViewData.Event) async {
+        guard let index = viewData.events.firstIndex(of: event) else { return }
+        viewData.events.remove(at: index)
+        do {
+            try await deleteEventUseCase.execute(id: event.id)
+        } catch {
+            viewData.events.insert(event, at: min(index, viewData.events.count))
+            deleteFailed = true
+        }
     }
 
     /// Reads the saved session into `viewData.user` and, with a session, the user's events into `viewData.events`.
