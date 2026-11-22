@@ -57,7 +57,7 @@ struct HomeView: View {
                 ForEach(viewModel.viewData.events) { event in
                     DSListRow(
                         event.name,
-                        subtitle: String(localized: "home.event.participants \(event.participantCount)"),
+                        subtitle: subtitle(for: event),
                         icon: "gift",
                         showsChevron: true
                     )
@@ -67,6 +67,13 @@ struct HomeView: View {
                 }
             }
         }
+    }
+
+    /// "12 dic 2026 · 6 participantes", or only the participants when the event has no date.
+    private func subtitle(for event: HomeViewData.Event) -> String {
+        let participants = String(localized: "home.event.participants \(event.participantCount)")
+        guard let date = event.date else { return participants }
+        return "\(date.formatted(date: .abbreviated, time: .omitted)) · \(participants)"
     }
 }
 

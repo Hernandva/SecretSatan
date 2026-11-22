@@ -38,6 +38,7 @@ struct CreateEventUseCase: CreateEventUseCaseProtocol {
         return HomeViewData.Event(
             id: response.id,
             name: response.name,
+            date: response.date,
             participantCount: response.participantCount
         )
     }

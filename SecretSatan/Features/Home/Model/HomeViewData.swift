@@ -13,6 +13,8 @@ struct HomeViewData: Equatable, Sendable {
     struct Event: Equatable, Sendable, Identifiable {
         let id: String
         let name: String
+        /// Day of the event, or `nil` when it has none.
+        let date: Date?
         let participantCount: Int
     }
 
