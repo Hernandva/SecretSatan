@@ -50,22 +50,24 @@ struct EventDetailView: View {
 
     /// Name of the event and, below it, its date ("24 de diciembre de 2026"), each with its edit button.
     private func header(for event: EventDetailViewData.Event) -> some View {
-        VStack(alignment: .leading, spacing: 0) {
-            HStack(alignment: .top, spacing: DSSpacing.small) {
+        VStack(alignment: .leading, spacing: DSSpacing.small) {
+            HStack(spacing: DSSpacing.space3) {
                 DSText(event.name, style: .largeTitle)
                 Spacer(minLength: 0)
-                DSIconButton(systemName: "pencil") { viewModel.startEditingName() }
-                    .localized("eventDetail.editName")
+                DSButton(style: .secondary, size: .compact) { viewModel.startEditingName() }
+                    .localized("eventDetail.edit")
+                    .accessibilityLabel(Text(forKey: "eventDetail.editName", value: "Edit name"))
             }
-            HStack(spacing: DSSpacing.small) {
+            HStack(spacing: DSSpacing.space3) {
                 if let date = event.date {
                     DSText(date.formatted(date: .long, time: .omitted), style: .body, color: DSColor.textSecondary)
                 } else {
                     DSText(style: .body, color: DSColor.textSecondary).localized("eventDetail.noDate")
                 }
                 Spacer(minLength: 0)
-                DSIconButton(systemName: "calendar") { viewModel.startEditingDate() }
-                    .localized("eventDetail.editDate")
+                DSButton(style: .secondary, size: .compact) { viewModel.startEditingDate() }
+                    .localized("eventDetail.edit")
+                    .accessibilityLabel(Text(forKey: "eventDetail.editDate", value: "Edit date"))
             }
         }
     }

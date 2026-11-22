@@ -35,6 +35,23 @@
         }
       }
     },
+    "eventDetail.edit" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edit"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Editar"
+          }
+        }
+      }
+    },
     "eventDetail.editDate" : {
       "extractionState" : "manual",
       "localizations" : {
