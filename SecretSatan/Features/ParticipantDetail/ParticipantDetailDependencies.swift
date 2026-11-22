@@ -10,15 +10,23 @@ final class ParticipantDetailDependencies {
     /// Participant selected in the list of EventDetail, passed in by the route.
     private let participant: ParticipantDetailViewData.Participant
     private let repository: any ParticipantsRepositoryProtocol
+    /// Reads the participants of the event, for the "Nueva exclusión" sheet.
+    private let eventsRepository: any EventsRepositoryProtocol
+    /// Creates the exclusions picked in the "Nueva exclusión" sheet.
+    private let exclusionsRepository: any ExclusionsRepositoryProtocol
 
     init(
         eventId: String,
         participant: ParticipantDetailViewData.Participant,
-        repository: any ParticipantsRepositoryProtocol = ParticipantsRepository()
+        repository: any ParticipantsRepositoryProtocol = ParticipantsRepository(),
+        eventsRepository: any EventsRepositoryProtocol = EventsRepository(),
+        exclusionsRepository: any ExclusionsRepositoryProtocol = ExclusionsRepository()
     ) {
         self.eventId = eventId
         self.participant = participant
         self.repository = repository
+        self.eventsRepository = eventsRepository
+        self.exclusionsRepository = exclusionsRepository
     }
 
     func resolveEventId() -> String {
@@ -35,6 +43,22 @@ final class ParticipantDetailDependencies {
 
     func resolveUseCase() -> any ParticipantDetailUseCaseProtocol {
         ParticipantDetailUseCase(dependencies: self)
+    }
+
+    func resolveEventsRepository() -> any EventsRepositoryProtocol {
+        eventsRepository
+    }
+
+    func resolveExclusionsRepository() -> any ExclusionsRepositoryProtocol {
+        exclusionsRepository
+    }
+
+    func resolveAddExclusionUseCase() -> any AddExclusionUseCaseProtocol {
+        AddExclusionUseCase(dependencies: self)
+    }
+
+    func resolveExclusionCandidatesUseCase() -> any ExclusionCandidatesUseCaseProtocol {
+        ExclusionCandidatesUseCase(dependencies: self)
     }
 
     func resolveWardsUseCase() -> any ParticipantWardsUseCaseProtocol {

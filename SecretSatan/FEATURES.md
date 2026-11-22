@@ -187,7 +187,7 @@ adds the route to the parent coordinator and updates this file.
 | `Login` | — (root) | — |
 | `Home` | Login | `AuthRepository`, `EventsRepository` |
 | `EventDetail` | Home | `EventsRepository`, `ParticipantsRepository` |
-| `ParticipantDetail` | EventDetail | `ParticipantsRepository` |
+| `ParticipantDetail` | EventDetail | `ParticipantsRepository`, `EventsRepository`, `ExclusionsRepository` |
 <!-- codegen:feature-registry:end -->
 
 ## App map

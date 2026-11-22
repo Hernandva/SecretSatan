@@ -19,8 +19,26 @@ final class ParticipantDetailViewModel {
         case editPhone
         /// "Nuevo protegido": adds a ward of the participant.
         case newWard
+        /// "Nueva exclusión": picks a participant this one must not be assigned.
+        case newExclusion
 
         var id: Self { self }
+    }
+
+    /// State of the exclusion being saved from the "Nueva exclusión" sheet.
+    enum AddExclusionState: Equatable {
+        case idle
+        case saving
+        /// `reason` is the backend's message when it refused the exclusion, or `nil` for any other failure.
+        case failed(reason: String?)
+    }
+
+    /// State of the participants offered in the "Nueva exclusión" sheet.
+    enum CandidatesState: Equatable {
+        case idle
+        case loading
+        case loaded
+        case failed
     }
 
     /// State of the change being saved from the name or the phone sheet.
@@ -41,6 +59,8 @@ final class ParticipantDetailViewModel {
     private(set) var state: State = .idle
     private(set) var editState: EditState = .idle
     private(set) var addWardState: AddWardState = .idle
+    private(set) var candidatesState: CandidatesState = .idle
+    private(set) var addExclusionState: AddExclusionState = .idle
     /// Data of the screen. Each use case result updates only its own field.
     private(set) var viewData = ParticipantDetailViewData()
 
@@ -59,6 +79,8 @@ final class ParticipantDetailViewModel {
     private let exclusionsUseCase: any ParticipantExclusionsUseCaseProtocol
     private let editParticipantUseCase: any EditParticipantUseCaseProtocol
     private let addWardUseCase: any AddWardUseCaseProtocol
+    private let exclusionCandidatesUseCase: any ExclusionCandidatesUseCaseProtocol
+    private let addExclusionUseCase: any AddExclusionUseCaseProtocol
 
     /// Receives only the container and resolves what it needs from it.
     init(dependencies: ParticipantDetailDependencies) {
@@ -67,6 +89,8 @@ final class ParticipantDetailViewModel {
         self.exclusionsUseCase = dependencies.resolveExclusionsUseCase()
         self.editParticipantUseCase = dependencies.resolveEditParticipantUseCase()
         self.addWardUseCase = dependencies.resolveAddWardUseCase()
+        self.exclusionCandidatesUseCase = dependencies.resolveExclusionCandidatesUseCase()
+        self.addExclusionUseCase = dependencies.resolveAddExclusionUseCase()
     }
 
     /// Shows the participant passed in by EventDetail, then loads its exclusions and, unless it has a guardian,
@@ -166,10 +190,54 @@ final class ParticipantDetailViewModel {
         }
     }
 
-    // MARK: - Actions
+    // MARK: - New exclusion
 
-    /// "Añadir" in "Exclusiones". The sheet to pick an exclusion is not built yet.
-    func startAddingExclusion() {}
+    /// "Añadir" in "Exclusiones": opens the "Nueva exclusión" sheet, which loads its list with
+    /// `loadExclusionCandidates()`.
+    func startAddingExclusion() {
+        guard sheet == nil else { return }
+        viewData.exclusionCandidates = []
+        candidatesState = .idle
+        addExclusionState = .idle
+        sheet = .newExclusion
+    }
+
+    /// Loads the participants of the event that can be excluded: everyone but the participant itself, its
+    /// guardian, its wards and its current exclusions.
+    func loadExclusionCandidates() async {
+        guard let participant = viewData.participant else { return }
+        var excludedIds = Set([participant.id])
+        if let guardianId = participant.guardianId {
+            excludedIds.insert(guardianId)
+        }
+        excludedIds.formUnion(viewData.wards.map(\.id))
+        excludedIds.formUnion(viewData.exclusions.map(\.id))
+
+        candidatesState = .loading
+        do {
+            viewData.exclusionCandidates = try await exclusionCandidatesUseCase.execute(excluding: excludedIds)
+            candidatesState = .loaded
+        } catch {
+            candidatesState = .failed
+        }
+    }
+
+    /// Saves the exclusion with the participant picked in the "Nueva exclusión" sheet, adds it to "Exclusiones"
+    /// and closes the sheet. Ignored while another one is being saved.
+    func selectExclusionCandidate(_ candidate: ParticipantDetailViewData.Member) async {
+        guard addExclusionState != .saving else { return }
+        addExclusionState = .saving
+        do {
+            try await addExclusionUseCase.execute(receiverId: candidate.id)
+            viewData.exclusions.append(candidate)
+            addExclusionState = .idle
+            sheet = nil
+        } catch AddExclusionError.rejected(let reason) {
+            addExclusionState = .failed(reason: reason)
+        } catch {
+            addExclusionState = .failed(reason: nil)
+        }
+    }
 
     // MARK: - Private
 

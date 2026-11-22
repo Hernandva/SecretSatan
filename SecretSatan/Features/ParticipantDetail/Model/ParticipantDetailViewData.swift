@@ -45,4 +45,6 @@ struct ParticipantDetailViewData: Equatable, Sendable {
     /// "Exclusiones": participants this participant must not be assigned in the draw.
     /// Returned by `ParticipantExclusionsUseCase`.
     var exclusions: [Member] = []
+    /// Participants offered in the "Nueva exclusión" sheet. Returned by `ExclusionCandidatesUseCase`.
+    var exclusionCandidates: [Member] = []
 }

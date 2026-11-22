@@ -31,6 +31,7 @@ struct ParticipantDetailView: View {
             case .editName: nameSheet
             case .editPhone: phoneSheet
             case .newWard: wardSheet
+            case .newExclusion: exclusionSheet
             }
         }
         .task { await viewModel.load() }
@@ -109,6 +110,63 @@ struct ParticipantDetailView: View {
         }
         .dsSheet(isSaving: viewModel.addWardState == .saving)
         .presentationDetents([.medium, .large])
+    }
+
+    /// "Nueva exclusión" sheet: the participants of the event that can be excluded. Picking one saves the exclusion,
+    /// adds it to "Exclusiones" and closes the sheet.
+    private var exclusionSheet: some View {
+        VStack(alignment: .leading, spacing: DSSpacing.medium) {
+            DSText(style: .title).localized("participantDetail.newExclusion.title")
+
+            switch viewModel.candidatesState {
+            case .idle, .loading:
+                ProgressView()
+                    .frame(maxWidth: .infinity)
+            case .failed:
+                DSText(style: .footnote, color: DSColor.destructive).localized("participantDetail.newExclusion.error")
+            case .loaded:
+                addExclusionError
+                exclusionCandidates
+                    .disabled(viewModel.addExclusionState == .saving)
+            }
+
+            Spacer(minLength: 0)
+        }
+        .dsSheet(isSaving: viewModel.addExclusionState == .saving)
+        .presentationDetents([.medium, .large])
+        .task { await viewModel.loadExclusionCandidates() }
+    }
+
+    @ViewBuilder
+    private var exclusionCandidates: some View {
+        if viewModel.viewData.exclusionCandidates.isEmpty {
+            DSText(style: .body, color: DSColor.textSecondary).localized("participantDetail.newExclusion.empty")
+        } else {
+            ScrollView {
+                DSListGroup(separatorInset: DSListRow.iconSeparatorInset) {
+                    ForEach(viewModel.viewData.exclusionCandidates) { candidate in
+                        Button {
+                            Task { await viewModel.selectExclusionCandidate(candidate) }
+                        } label: {
+                            DSListRow(candidate.name, initials: candidate.initials)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var addExclusionError: some View {
+        if case .failed(let reason) = viewModel.addExclusionState {
+            if let reason {
+                DSText(reason, style: .footnote, color: DSColor.destructive)
+            } else {
+                DSText(style: .footnote, color: DSColor.destructive)
+                    .localized("participantDetail.newExclusion.saveError")
+            }
+        }
     }
 
     @ViewBuilder

@@ -909,6 +909,74 @@
         }
       }
     },
+    "participantDetail.newExclusion.empty" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "There's nobody else to exclude."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay más participantes que excluir."
+          }
+        }
+      }
+    },
+    "participantDetail.newExclusion.error" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't load the participants. Please try again."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudieron cargar los participantes. Inténtalo de nuevo."
+          }
+        }
+      }
+    },
+    "participantDetail.newExclusion.saveError" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't add the exclusion. Please try again."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo añadir la exclusión. Inténtalo de nuevo."
+          }
+        }
+      }
+    },
+    "participantDetail.newExclusion.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New exclusion"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nueva exclusión"
+          }
+        }
+      }
+    },
     "participantDetail.newWard.error" : {
       "extractionState" : "manual",
       "localizations" : {

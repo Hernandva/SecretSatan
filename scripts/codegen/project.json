@@ -21,6 +21,10 @@
     "Participants": {
       "type": "remote",
       "storage": null
+    },
+    "Exclusions": {
+      "type": "remote",
+      "storage": null
     }
   }
 }
