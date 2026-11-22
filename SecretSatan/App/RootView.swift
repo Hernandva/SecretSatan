@@ -6,7 +6,7 @@ import SwiftUI
 struct RootView: View {
     var body: some View {
         NavigationStack {
-            HomeCoordinator().start()
+            LoginCoordinator().start()
         }
         .tint(DSColor.accent)
     }

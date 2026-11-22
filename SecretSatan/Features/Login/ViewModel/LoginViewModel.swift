@@ -3,7 +3,7 @@ import Observation
 
 @MainActor
 @Observable
-final class HomeViewModel {
+final class LoginViewModel {
     enum State: Equatable {
         case idle
         case loading
@@ -13,12 +13,12 @@ final class HomeViewModel {
 
     private(set) var state: State = .idle
     /// Data of the screen. Each use case result updates only its own field.
-    private(set) var viewData = HomeViewData()
+    private(set) var viewData = LoginViewData()
 
-    private let useCase: any HomeUseCaseProtocol
+    private let useCase: any LoginUseCaseProtocol
 
     /// Receives only the container and resolves what it needs from it.
-    init(dependencies: HomeDependencies) {
+    init(dependencies: LoginDependencies) {
         self.useCase = dependencies.resolveUseCase()
     }
 

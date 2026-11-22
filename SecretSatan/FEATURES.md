@@ -146,7 +146,7 @@ adds the route to the parent coordinator and updates this file.
 <!-- codegen:feature-registry:start -->
 | Feature | Opened from | Repository |
 |---|---|---|
-| `Home` | — (root) | — |
+| `Login` | — (root) | — |
 <!-- codegen:feature-registry:end -->
 
 ## App map
@@ -156,6 +156,6 @@ Which feature opens which. `A --> B` means feature A can open feature B.
 <!-- codegen:app-map:start -->
 ```mermaid
 graph TD
-    Home
+    Login
 ```
 <!-- codegen:app-map:end -->

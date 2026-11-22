@@ -2,7 +2,7 @@
 """Create a new feature (scene) following FEATURES.md.
 
 Usage:
-    python3 scripts/codegen/new_feature.py --name Profile --parent Home [--repository Users]
+    python3 scripts/codegen/new_feature.py --name Profile --parent Login [--repository Users]
 
 What it does:
   1. Creates and checks out `feature/<Project>-<Feature>` from `develop` (skip with --no-branch).

@@ -2,7 +2,7 @@
   "name": "SecretSatan",
   "slug": "secretsatan",
   "appDirectory": "SecretSatan",
-  "rootFeature": "Home",
+  "rootFeature": "Login",
   "dataSources": "Packages/SecretSatanData/Sources/SecretSatanData",
   "designSystemPackage": "Packages/SecretSatanUI",
   "platforms": [

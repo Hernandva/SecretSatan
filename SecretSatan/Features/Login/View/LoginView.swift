@@ -1,17 +1,17 @@
 import SecretSatanUI
 import SwiftUI
 
-struct HomeView: View {
-    @State private var viewModel: HomeViewModel
+struct LoginView: View {
+    @State private var viewModel: LoginViewModel
 
     /// Receives only the container and resolves the view model from it.
-    init(dependencies: HomeDependencies) {
+    init(dependencies: LoginDependencies) {
         _viewModel = State(initialValue: dependencies.resolveViewModel())
     }
 
     var body: some View {
         DSScreen {
-            DSText(style: .largeTitle).localized("home.title")
+            DSText(style: .largeTitle).localized("login.title")
 
             switch viewModel.state {
             case .idle, .loading:
@@ -29,6 +29,6 @@ struct HomeView: View {
 
 #Preview {
     NavigationStack {
-        HomeCoordinator().start()
+        LoginCoordinator().start()
     }
 }

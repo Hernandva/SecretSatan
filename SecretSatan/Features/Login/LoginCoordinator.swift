@@ -1,22 +1,22 @@
 import SwiftUI
 
-/// Entry point of the Home feature.
-/// Builds the view through `HomeDependencies` and resolves the routes to the features opened from it.
+/// Entry point of the Login feature.
+/// Builds the view through `LoginDependencies` and resolves the routes to the features opened from it.
 @MainActor
-final class HomeCoordinator: Coordinator {
-    /// One case per feature that can be opened from Home.
+final class LoginCoordinator: Coordinator {
+    /// One case per feature that can be opened from Login.
     enum Route: Hashable {
         // @codegen:routes
     }
 
-    private let dependencies: HomeDependencies
+    private let dependencies: LoginDependencies
 
-    init(dependencies: HomeDependencies = HomeDependencies()) {
+    init(dependencies: LoginDependencies = LoginDependencies()) {
         self.dependencies = dependencies
     }
 
     func start() -> some View {
-        HomeView(dependencies: dependencies)
+        LoginView(dependencies: dependencies)
             .navigationDestination(for: Route.self) { route in
                 self.destination(for: route)
             }
