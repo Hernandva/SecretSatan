@@ -13,7 +13,7 @@ struct EventDetailViewData: Equatable, Sendable {
     }
 
     /// One row of the participant list, returned by `EventParticipantsUseCase`.
-    struct Participant: Equatable, Sendable, Identifiable {
+    struct Participant: Hashable, Sendable, Identifiable {
         let id: String
         let name: String
         /// Up to two letters shown on the avatar, e.g. "LM" for "Lucía Martín".

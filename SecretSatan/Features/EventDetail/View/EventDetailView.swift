@@ -79,10 +79,13 @@ struct EventDetailView: View {
                 DSSectionHeader().localized("eventDetail.participants")
                 DSListGroup(separatorInset: DSListRow.iconSeparatorInset) {
                     ForEach(viewModel.viewData.participants) { participant in
-                        DSListRow(participant.name, initials: participant.initials)
-                            .dsSwipeToDelete(String(localized: "eventDetail.participant.delete")) {
-                                Task { await viewModel.deleteParticipant(participant) }
-                            }
+                        NavigationLink(value: EventDetailCoordinator.Route.participantDetail(participant)) {
+                            DSListRow(participant.name, initials: participant.initials, showsChevron: true)
+                        }
+                        .buttonStyle(.plain)
+                        .dsSwipeToDelete(String(localized: "eventDetail.participant.delete")) {
+                            Task { await viewModel.deleteParticipant(participant) }
+                        }
                     }
                 }
             }

@@ -149,6 +149,7 @@ adds the route to the parent coordinator and updates this file.
 | `Login` | — (root) | — |
 | `Home` | Login | `AuthRepository`, `EventsRepository` |
 | `EventDetail` | Home | `EventsRepository`, `ParticipantsRepository` |
+| `ParticipantDetail` | EventDetail | `ParticipantsRepository` |
 <!-- codegen:feature-registry:end -->
 
 ## App map
@@ -161,5 +162,6 @@ graph TD
     Login
     Login --> Home
     Home --> EventDetail
+    EventDetail --> ParticipantDetail
 ```
 <!-- codegen:app-map:end -->

@@ -670,6 +670,23 @@
           }
         }
       }
+    },
+    "participantDetail.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Participant"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Participante"
+          }
+        }
+      }
     }
   },
   "version" : "1.0"
