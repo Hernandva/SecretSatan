@@ -47,14 +47,53 @@ public final class NetworkClient: @unchecked Sendable {
         let encoder: any ParameterEncoder = method == .get
             ? URLEncodedFormParameterEncoder.default
             : JSONParameterEncoder.default
+        let dataRequest = session.request(
+            url,
+            method: method.alamofireMethod,
+            parameters: body,
+            encoder: encoder,
+            headers: HTTPHeaders(headers)
+        )
+        return try await decode(dataRequest, method: method, url: url)
+    }
+
+    /// Sends a request without a body and decodes the response DAO.
+    func request<Response: Decodable & Sendable>(
+        _ url: URL,
+        method: RequestMethod,
+        headers: [String: String] = [:]
+    ) async throws -> Response {
+        let dataRequest = session.request(url, method: method.alamofireMethod, headers: HTTPHeaders(headers))
+        return try await decode(dataRequest, method: method, url: url)
+    }
+
+    /// Sends a request without a body whose response has no body either, e.g. a `DELETE` answered with `204`.
+    func send(_ url: URL, method: RequestMethod, headers: [String: String] = [:]) async throws {
         let response = await session
-            .request(
-                url,
-                method: method.alamofireMethod,
-                parameters: body,
-                encoder: encoder,
-                headers: HTTPHeaders(headers)
+            .request(url, method: method.alamofireMethod, headers: HTTPHeaders(headers))
+            .validate()
+            .serializingData(emptyResponseCodes: [200, 204, 205])
+            .response
+        switch response.result {
+        case .success:
+            NetworkLog.success(
+                method: method,
+                url: url,
+                response: response.response,
+                duration: response.metrics?.taskInterval.duration
             )
+        case .failure(let error):
+            NetworkLog.failure(error, method: method, url: url, response: response.response, data: response.data)
+            throw Self.error(for: error, response: response.response, data: response.data)
+        }
+    }
+
+    private func decode<Response: Decodable & Sendable>(
+        _ dataRequest: DataRequest,
+        method: RequestMethod,
+        url: URL
+    ) async throws -> Response {
+        let response = await dataRequest
             .validate()
             .serializingDecodable(Response.self)
             .response
@@ -69,7 +108,26 @@ public final class NetworkClient: @unchecked Sendable {
             return value
         case .failure(let error):
             NetworkLog.failure(error, method: method, url: url, response: response.response, data: response.data)
-            throw error
+            throw Self.error(for: error, response: response.response, data: response.data)
         }
     }
+
+    /// `NetworkError.server` when the backend answered with its error body, the Alamofire error otherwise.
+    private static func error(for error: AFError, response: HTTPURLResponse?, data: Data?) -> any Error {
+        guard
+            let response,
+            let data,
+            let body = try? JSONDecoder().decode(ServerErrorDAO.self, from: data),
+            body.error
+        else {
+            return error
+        }
+        return NetworkError.server(statusCode: response.statusCode, reason: body.reason)
+    }
+}
+
+/// Error body of the backend (Vapor): `{ "error": true, "reason": "…" }`.
+private struct ServerErrorDAO: Decodable {
+    let error: Bool
+    let reason: String
 }

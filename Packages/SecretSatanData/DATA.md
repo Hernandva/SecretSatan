@@ -73,7 +73,10 @@ public static let configuration = RepositoryConfiguration(
 )
 ```
 
-Public API: `fetch(_ request:serviceName:) async throws -> any <Name>ResponseProtocol`.
+Public API: the generator writes `fetch(_ request:serviceName:) async throws -> any <Name>ResponseProtocol`. When the
+services return different shapes, replace it with one typed function per endpoint (as `Events` does:
+`fetchEvents()`, `createEvent(_:)`, `fetchEvent(id:)`, `deleteEvent(id:)`). A path with an id, such as
+`events/:id`, declares only `events` in `serviceNames` and appends the id to its URL.
 
 The backend base URL is not written in the package: the app sets `API_BASE_URL` in `Configs/Config.xcconfig`,
 `project.yml` copies it to the `APIBaseURL` key of its Info.plist, and every repository reads it with
@@ -83,6 +86,16 @@ The backend base URL is not written in the package: the app sets `API_BASE_URL` 
 `NetworkClient` logs every request, successful or not, under the `SecretSatanData` subsystem, `Network` category,
 **only in Debug builds**. It never logs request bodies, which may hold tokens.
 Calls to a service that is not in `serviceNames`, or made while `baseURL` is empty, throw a `NetworkError`.
+When the backend answers with its error body, `{ "error": true, "reason": "…" }`, `NetworkClient` throws
+`NetworkError.server(statusCode:reason:)`; any other failure stays the Alamofire error. Use `request(_:method:headers:)`
+for calls without a body and `send(_:method:headers:)` for responses without a body (`204 No Content`).
+
+### Authenticated services
+
+Services of the SecretSatan backend that need the user send `Authorization: Bearer <token>` with the session the
+`Auth` repository saved. The repository reads it through the internal `AuthSessionStorageProtocol` (injected in its
+internal `init`, so tests use an in-memory one) and throws its own `notSignedIn` error, before any request, when
+there is no session or it has expired (see `Events`).
 
 ### Repositories with several providers
 
@@ -137,4 +150,5 @@ python3 scripts/codegen/new_repo.py --name <RepositoryName> --type local --stora
 | Repository | Type | Storage | Public API | Folder |
 |---|---|---|---|---|
 | `Auth` | Remote | Keychain (session) | `AuthRepositoryProtocol` | `Sources/SecretSatanData/Repositories/Auth` |
+| `Events` | Remote (Bearer session of `Auth`) | — | `EventsRepositoryProtocol` | `Sources/SecretSatanData/Repositories/Events` |
 <!-- codegen:repository-registry:end -->
