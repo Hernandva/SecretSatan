@@ -25,7 +25,33 @@ struct ParticipantDetailView: View {
                 DSText(style: .footnote, color: DSColor.destructive).localized("participantDetail.error")
             }
         }
+        .sheet(isPresented: $viewModel.isEditingName) { nameSheet }
         .task { await viewModel.load() }
+    }
+
+    /// Sheet with the current name. "Guardar" turns active once the name changes.
+    private var nameSheet: some View {
+        VStack(alignment: .leading, spacing: DSSpacing.medium) {
+            DSText(style: .title).localized("participantDetail.editName.title")
+
+            DSTextField(value: $viewModel.draftName)
+                .localized("participantDetail.editName.placeholder")
+                .textContentType(.name)
+                .submitLabel(.done)
+                .onSubmit { Task { await viewModel.saveName() } }
+
+            if case .failed = viewModel.editState {
+                DSText(style: .footnote, color: DSColor.destructive).localized("participantDetail.editError")
+            }
+
+            Spacer(minLength: 0)
+
+            DSButton { Task { await viewModel.saveName() } }
+                .localized("participantDetail.save")
+                .disabled(!viewModel.canSaveName)
+        }
+        .dsSheet(isSaving: viewModel.editState == .saving)
+        .presentationDetents([.medium, .large])
     }
 
     private func content(for participant: ParticipantDetailViewData.Participant) -> some View {
@@ -118,7 +144,8 @@ struct ParticipantDetailView: View {
         id: "preview",
         name: "Lucía Martín",
         initials: "LM",
-        phone: "+34 612 345 678"
+        phone: "+34 612 345 678",
+        guardianId: nil
     )
     NavigationStack {
         ParticipantDetailCoordinator(

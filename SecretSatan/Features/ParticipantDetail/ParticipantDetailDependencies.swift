@@ -45,6 +45,10 @@ final class ParticipantDetailDependencies {
         ParticipantExclusionsUseCase(dependencies: self)
     }
 
+    func resolveEditParticipantUseCase() -> any EditParticipantUseCaseProtocol {
+        EditParticipantUseCase(dependencies: self)
+    }
+
     func resolveViewModel() -> ParticipantDetailViewModel {
         ParticipantDetailViewModel(dependencies: self)
     }

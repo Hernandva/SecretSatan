@@ -42,6 +42,7 @@ Custom fonts named in the tokens must be added to the app bundle (`.ttf`/`.otf`)
 | `DSTextButton(_:icon:action:)` | Text-only button in the primary color with an optional leading SF Symbol and a 44 pt tap target, e.g. "+ Añadir" beside a `DSSectionHeader`. |
 | `DSListRow(_:subtitle:icon:initials:showsChevron:)` | Row in a list. With `icon` (SF Symbol) it shows a 40 pt tile of the primary color and the headline / subheadline type. With `initials` it shows them on a 40 pt round avatar (`fillSecondary`), as in the participant list. |
 | `DSListGroup(separatorInset:) { … }` | Rows on a rounded surface (`radiusGroup`) with separators between them. Use `DSListRow.iconSeparatorInset` for rows with an icon. |
+| `.dsSheet(isSaving:)` | Margins, background and drag indicator of a bottom sheet with a form. While `isSaving` is `true` the sheet can't be swiped away. Add `.presentationDetents` beside it. |
 | `.dsBottomBar { … }` | Pins the screen's main button to the bottom, above the safe area, with the screen margins and background. |
 | `.dsSwipeToDelete(_:action:)` | On a row of a `DSListGroup`: dragging it left reveals a destructive button that runs `action`; also a VoiceOver action. |
 | `DSCard { … }` | Groups content on a surface. |

@@ -46,7 +46,12 @@ struct NewParticipantUseCase: NewParticipantUseCaseProtocol {
                 eventId: eventId,
                 Request(name: input.name, phone: input.phone)
             )
-            return EventDetailViewData.Participant(id: response.id, name: response.name, phone: response.phone)
+            return EventDetailViewData.Participant(
+                id: response.id,
+                name: response.name,
+                phone: response.phone,
+                guardianId: response.guardianId
+            )
         } catch NetworkError.server(_, let reason) {
             throw NewParticipantError.rejected(reason)
         }

@@ -47,7 +47,8 @@ private extension EventDetailCoordinator {
             id: participant.id,
             name: participant.name,
             initials: participant.initials,
-            phone: participant.phone
+            phone: participant.phone,
+            guardianId: participant.guardianId
         )
     }
 }

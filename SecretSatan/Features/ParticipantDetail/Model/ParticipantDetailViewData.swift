@@ -26,6 +26,9 @@ struct ParticipantDetailViewData: Equatable, Sendable {
         let initials: String
         /// `nil` for participants without a phone, such as children.
         let phone: String?
+        /// Participant who receives this participant's link, e.g. the guardian of a child, or `nil`.
+        /// Sent back unchanged when the participant is edited, because the edit replaces every field.
+        let guardianId: String?
     }
 
     /// Result of `ParticipantDetailUseCase`, or `nil` until it loads.

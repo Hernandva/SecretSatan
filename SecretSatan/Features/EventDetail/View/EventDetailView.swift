@@ -112,7 +112,7 @@ struct EventDetailView: View {
                 .localized("eventDetail.save")
                 .disabled(!viewModel.canSaveName)
         }
-        .sheetLayout(isSaving: viewModel.editState == .saving)
+        .dsSheet(isSaving: viewModel.editState == .saving)
         .presentationDetents([.medium, .large])
     }
 
@@ -135,7 +135,7 @@ struct EventDetailView: View {
 
             Spacer(minLength: 0)
         }
-        .sheetLayout(isSaving: viewModel.editState == .saving)
+        .dsSheet(isSaving: viewModel.editState == .saving)
         .presentationDetents([.large])
     }
 
@@ -169,7 +169,7 @@ struct EventDetailView: View {
                 .localized("eventDetail.save")
                 .disabled(!viewModel.canSaveParticipant)
         }
-        .sheetLayout(isSaving: viewModel.addParticipantState == .saving)
+        .dsSheet(isSaving: viewModel.addParticipantState == .saving)
         .presentationDetents([.medium, .large])
     }
 
@@ -178,19 +178,6 @@ struct EventDetailView: View {
         if case .failed = viewModel.editState {
             DSText(style: .footnote, color: DSColor.destructive).localized("eventDetail.editError")
         }
-    }
-}
-
-private extension View {
-    /// Margins, background and drag indicator of the edit sheets, as in "Nuevo evento".
-    /// The sheet can't be swiped away while the change is being saved.
-    func sheetLayout(isSaving: Bool) -> some View {
-        padding(.horizontal, DSSpacing.medium)
-            .padding(.top, DSSpacing.large)
-            .padding(.bottom, DSSpacing.small)
-            .background(DSColor.background.ignoresSafeArea())
-            .presentationDragIndicator(.visible)
-            .interactiveDismissDisabled(isSaving)
     }
 }
 
