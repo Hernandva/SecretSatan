@@ -18,6 +18,23 @@
         }
       }
     },
+    "eventDetail.deleteError" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't remove the participant."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo quitar al participante."
+          }
+        }
+      }
+    },
     "eventDetail.editDate" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -235,6 +252,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sin fecha"
+          }
+        }
+      }
+    },
+    "eventDetail.participant.delete" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eliminar"
           }
         }
       }

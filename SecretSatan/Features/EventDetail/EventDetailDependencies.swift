@@ -48,6 +48,10 @@ final class EventDetailDependencies {
         NewParticipantUseCase(dependencies: self)
     }
 
+    func resolveDeleteParticipantUseCase() -> any DeleteParticipantUseCaseProtocol {
+        DeleteParticipantUseCase(dependencies: self)
+    }
+
     func resolveViewModel() -> EventDetailViewModel {
         EventDetailViewModel(dependencies: self)
     }

@@ -47,11 +47,16 @@ final class EventDetailViewModel {
     var participantName = ""
     /// Phone typed in the "Nuevo participante" sheet. Required.
     var participantPhone = ""
+    /// `true` after removing a participant fails, so the view shows an alert. The view sets it back to `false`.
+    var deleteFailed = false
+    /// The backend's message when it refused to remove the participant, or `nil` for any other failure.
+    private(set) var deleteFailureReason: String?
 
     private let useCase: any EventDetailUseCaseProtocol
     private let participantsUseCase: any EventParticipantsUseCaseProtocol
     private let editEventUseCase: any EditEventUseCaseProtocol
     private let newParticipantUseCase: any NewParticipantUseCaseProtocol
+    private let deleteParticipantUseCase: any DeleteParticipantUseCaseProtocol
 
     /// Receives only the container and resolves what it needs from it.
     init(dependencies: EventDetailDependencies) {
@@ -59,6 +64,7 @@ final class EventDetailViewModel {
         self.participantsUseCase = dependencies.resolveParticipantsUseCase()
         self.editEventUseCase = dependencies.resolveEditEventUseCase()
         self.newParticipantUseCase = dependencies.resolveNewParticipantUseCase()
+        self.deleteParticipantUseCase = dependencies.resolveDeleteParticipantUseCase()
     }
 
     /// Shows the event passed in by Home right away, then loads its participants.
@@ -139,6 +145,26 @@ final class EventDetailViewModel {
             addParticipantState = .failed(reason: reason)
         } catch {
             addParticipantState = .failed(reason: nil)
+        }
+    }
+
+    // MARK: - Delete participant
+
+    /// Removes the participant from the list at once and from the event on the backend. If that fails, the
+    /// participant goes back to its place and `deleteFailed` turns on.
+    func deleteParticipant(_ participant: EventDetailViewData.Participant) async {
+        guard let index = viewData.participants.firstIndex(of: participant) else { return }
+        viewData.participants.remove(at: index)
+        do {
+            try await deleteParticipantUseCase.execute(id: participant.id)
+        } catch {
+            viewData.participants.insert(participant, at: min(index, viewData.participants.count))
+            if case DeleteParticipantError.rejected(let reason) = error {
+                deleteFailureReason = reason
+            } else {
+                deleteFailureReason = nil
+            }
+            deleteFailed = true
         }
     }
 

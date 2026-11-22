@@ -36,6 +36,15 @@ struct EventDetailView: View {
         .sheet(isPresented: $viewModel.isEditingName) { nameSheet }
         .sheet(isPresented: $viewModel.isEditingDate) { dateSheet }
         .sheet(isPresented: $viewModel.isAddingParticipant) { participantSheet }
+        .alert(
+            Text(forKey: "eventDetail.deleteError", value: "Couldn't remove the participant."),
+            isPresented: $viewModel.deleteFailed
+        ) {
+        } message: {
+            if let reason = viewModel.deleteFailureReason {
+                Text(reason)
+            }
+        }
         .task { await viewModel.load() }
     }
 
@@ -71,6 +80,9 @@ struct EventDetailView: View {
                 DSListGroup(separatorInset: DSListRow.iconSeparatorInset) {
                     ForEach(viewModel.viewData.participants) { participant in
                         DSListRow(participant.name, initials: participant.initials)
+                            .dsSwipeToDelete(String(localized: "eventDetail.participant.delete")) {
+                                Task { await viewModel.deleteParticipant(participant) }
+                            }
                     }
                 }
             }
