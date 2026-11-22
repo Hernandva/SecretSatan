@@ -1,0 +1,13 @@
+{
+  "name": "SecretSatan",
+  "slug": "secretsatan",
+  "appDirectory": "SecretSatan",
+  "rootFeature": "Home",
+  "dataSources": "Packages/SecretSatanData/Sources/SecretSatanData",
+  "designSystemPackage": "Packages/SecretSatanUI",
+  "platforms": [
+    "iphone",
+    "ipad"
+  ],
+  "repositories": {}
+}
