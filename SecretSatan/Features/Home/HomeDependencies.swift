@@ -6,17 +6,30 @@ import SecretSatanData
 @MainActor
 final class HomeDependencies {
     private let repository: any AuthRepositoryProtocol
+    private let eventsRepository: any EventsRepositoryProtocol
 
-    init(repository: any AuthRepositoryProtocol = AuthRepository()) {
+    init(
+        repository: any AuthRepositoryProtocol = AuthRepository(),
+        eventsRepository: any EventsRepositoryProtocol = EventsRepository()
+    ) {
         self.repository = repository
+        self.eventsRepository = eventsRepository
     }
 
     func resolveRepository() -> any AuthRepositoryProtocol {
         repository
     }
 
+    func resolveEventsRepository() -> any EventsRepositoryProtocol {
+        eventsRepository
+    }
+
     func resolveUseCase() -> any HomeUseCaseProtocol {
         HomeUseCase(dependencies: self)
+    }
+
+    func resolveEventsUseCase() -> any EventsUseCaseProtocol {
+        EventsUseCase(dependencies: self)
     }
 
     func resolveViewModel() -> HomeViewModel {
