@@ -1,8 +1,8 @@
 import SecretSatanUI
 import SwiftUI
 
-/// "Evento": the name and date of the event selected in Home, with a button to edit each, its participants and
-/// the button that opens the "Nuevo participante" sheet.
+/// "Evento": the name and date of the event selected in Home, with a button to edit each, and its participants,
+/// whose "Añadir" button opens the "Nuevo participante" sheet.
 struct EventDetailView: View {
     @State private var viewModel: EventDetailViewModel
 
@@ -25,12 +25,6 @@ struct EventDetailView: View {
                 participants
             case .failed:
                 DSText(style: .footnote, color: DSColor.destructive).localized("eventDetail.error")
-            }
-        }
-        .dsBottomBar {
-            if viewModel.state == .loaded {
-                DSButton(icon: .symbol("plus")) { viewModel.startAddingParticipant() }
-                    .localized("eventDetail.addParticipant")
             }
         }
         .sheet(item: $viewModel.sheet) { sheet in
@@ -76,13 +70,22 @@ struct EventDetailView: View {
         }
     }
 
-    @ViewBuilder
+    /// "Participantes" header with its "Añadir" button and the rows of the participants, or a line saying the list
+    /// is empty.
     private var participants: some View {
-        if viewModel.viewData.participants.isEmpty {
-            DSText(style: .body, color: DSColor.textSecondary).localized("eventDetail.empty")
-        } else {
-            VStack(alignment: .leading, spacing: DSSpacing.small) {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(spacing: DSSpacing.space3) {
                 DSSectionHeader().localized("eventDetail.participants")
+                Spacer(minLength: 0)
+                DSTextButton(icon: "plus", action: viewModel.startAddingParticipant)
+                    .localized("eventDetail.add")
+                    .accessibilityLabel(Text(forKey: "eventDetail.addParticipant", value: "Add participant"))
+            }
+            if viewModel.viewData.participants.isEmpty {
+                DSText(style: .body, color: DSColor.textSecondary)
+                    .localized("eventDetail.empty")
+                    .padding(.horizontal, DSSpacing.medium)
+            } else {
                 DSListGroup(separatorInset: DSListRow.iconSeparatorInset) {
                     ForEach(viewModel.viewData.participants) { participant in
                         NavigationLink(value: EventDetailCoordinator.Route.participantDetail(participant)) {
