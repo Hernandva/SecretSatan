@@ -136,5 +136,5 @@ python3 scripts/codegen/new_repo.py --name <RepositoryName> --type local --stora
 <!-- codegen:repository-registry:start -->
 | Repository | Type | Storage | Public API | Folder |
 |---|---|---|---|---|
-| `Auth` | Remote | — | `AuthRepositoryProtocol` | `Sources/SecretSatanData/Repositories/Auth` |
+| `Auth` | Remote | Keychain (session) | `AuthRepositoryProtocol` | `Sources/SecretSatanData/Repositories/Auth` |
 <!-- codegen:repository-registry:end -->

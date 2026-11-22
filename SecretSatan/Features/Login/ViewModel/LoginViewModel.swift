@@ -7,13 +7,12 @@ final class LoginViewModel {
     enum State: Equatable {
         case idle
         case loading
+        /// The user is signed in: the screen moves on to the next one.
         case loaded
         case failed(String)
     }
 
     private(set) var state: State = .idle
-    /// Data of the screen. Each use case result updates only its own field.
-    private(set) var viewData = LoginViewData()
 
     private let useCase: any LoginUseCaseProtocol
 
@@ -36,12 +35,7 @@ final class LoginViewModel {
         guard state != .loading else { return }
         state = .loading
         do {
-            guard let session = try await useCase.execute(provider: provider) else {
-                state = .idle
-                return
-            }
-            viewData.session = session
-            state = .loaded
+            state = try await useCase.execute(provider: provider) ? .loaded : .idle
         } catch {
             state = .failed(error.localizedDescription)
         }

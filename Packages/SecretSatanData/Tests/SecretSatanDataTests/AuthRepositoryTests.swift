@@ -24,12 +24,17 @@ struct AuthRepositoryTests {
 
     private static func repository(
         configuration: RepositoryConfiguration = backend,
-        services: [any AuthProviderService]
+        services: [any AuthProviderService],
+        storage: any AuthSessionStorageProtocol = InMemorySessionStorage()
     ) -> AuthRepository {
         let sessionConfiguration = URLSessionConfiguration.ephemeral
         sessionConfiguration.protocolClasses = [StubURLProtocol.self]
         let client = NetworkClient(session: Session(configuration: sessionConfiguration))
-        return AuthRepository(client: client, configuration: configuration, services: services)
+        return AuthRepository(client: client, configuration: configuration, services: services, storage: storage)
+    }
+
+    private static func session(expiresAt: Date) -> AuthResponseDAO {
+        AuthResponseDAO(token: "saved", expiresAt: expiresAt, userDAO: AuthUserDAO(id: "u", name: nil, email: nil))
     }
 
     @Test func declaresOneServicePerProvider() {
@@ -56,6 +61,48 @@ struct AuthRepositoryTests {
         #expect(response.expiresAt == Date(timeIntervalSince1970: 1_796_119_200))
         #expect(response.user.id == "user-1")
         #expect(response.user.email == "ana@example.com")
+    }
+
+    @Test func savesTheSessionAfterSigningIn() async throws {
+        StubURLProtocol.statusCode = 200
+        StubURLProtocol.responseBody = Data(#"{"token":"session-token","expiresAt":4102444800,"user":{"id":"u"}}"#.utf8)
+        let storage = InMemorySessionStorage()
+        let repository = Self.repository(services: [StubService(provider: .apple)], storage: storage)
+
+        try await repository.signIn(Request(provider: .apple))
+
+        #expect(await storage.session?.token == "session-token")
+        #expect(try await repository.currentSession()?.token == "session-token")
+    }
+
+    @Test func doesNotSaveARejectedSession() async {
+        StubURLProtocol.statusCode = 401
+        StubURLProtocol.responseBody = Data(#"{"error":true}"#.utf8)
+        let storage = InMemorySessionStorage()
+        let repository = Self.repository(services: [StubService(provider: .apple)], storage: storage)
+
+        _ = try? await repository.signIn(Request(provider: .apple))
+
+        #expect(await storage.session == nil)
+    }
+
+    @Test func dropsAnExpiredSession() async throws {
+        let storage = InMemorySessionStorage(session: Self.session(expiresAt: Date(timeIntervalSinceNow: -60)))
+        let repository = Self.repository(services: [], storage: storage)
+
+        #expect(try await repository.currentSession() == nil)
+        #expect(await storage.session == nil)
+    }
+
+    @Test func storageRoundTripsTheSession() async throws {
+        let store = UserDefaultsStore(suiteName: "AuthRepositoryTests")
+        let storage = AuthSessionStorage(store: store)
+        let session = Self.session(expiresAt: Date(timeIntervalSince1970: 1_796_119_200))
+
+        try await storage.save(session)
+        #expect(try await storage.load() == session)
+        try await storage.remove()
+        #expect(try await storage.load() == nil)
     }
 
     @Test func throwsTheStatusCodeOfARejectedToken() async {
@@ -144,4 +191,17 @@ private final class StubURLProtocol: URLProtocol, @unchecked Sendable {
         }
         return data
     }
+}
+
+/// Session storage kept in memory, so tests do not touch the Keychain.
+private actor InMemorySessionStorage: AuthSessionStorageProtocol {
+    private(set) var session: AuthResponseDAO?
+
+    init(session: AuthResponseDAO? = nil) {
+        self.session = session
+    }
+
+    func load() async throws -> AuthResponseDAO? { session }
+    func save(_ session: AuthResponseDAO) async throws { self.session = session }
+    func remove() async throws { session = nil }
 }

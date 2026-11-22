@@ -1,8 +1,9 @@
 import Foundation
 
-/// Response of `POST /auth/apple` and `POST /auth/google`: `{ token, expiresAt, user }`.
+/// Response of `POST /auth/apple` and `POST /auth/google`: `{ token, expiresAt, user }`. It is also the session
+/// saved by `AuthSessionStorage`, encoded with `expiresAt` as a Unix timestamp, which the decoder accepts too.
 /// Internal to SecretSatanData: the app only sees AuthResponseProtocol.
-struct AuthResponseDAO: Decodable, Equatable, Sendable, AuthResponseProtocol {
+struct AuthResponseDAO: Codable, Equatable, Sendable, AuthResponseProtocol {
     private enum CodingKeys: String, CodingKey {
         case token
         case expiresAt
@@ -28,6 +29,13 @@ struct AuthResponseDAO: Decodable, Equatable, Sendable, AuthResponseProtocol {
         expiresAt = try Self.decodeDate(from: container, forKey: .expiresAt)
     }
 
+    func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(token, forKey: .token)
+        try container.encode(expiresAt.timeIntervalSince1970, forKey: .expiresAt)
+        try container.encode(userDAO, forKey: .userDAO)
+    }
+
     /// Reads an ISO 8601 date, with or without fractional seconds, or a Unix timestamp in seconds.
     private static func decodeDate(
         from container: KeyedDecodingContainer<CodingKeys>,
@@ -50,7 +58,7 @@ struct AuthResponseDAO: Decodable, Equatable, Sendable, AuthResponseProtocol {
 }
 
 /// `user` object of the session response.
-struct AuthUserDAO: Decodable, Equatable, Sendable, AuthUserProtocol {
+struct AuthUserDAO: Codable, Equatable, Sendable, AuthUserProtocol {
     let id: String
     let name: String?
     let email: String?

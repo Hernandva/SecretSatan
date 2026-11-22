@@ -8,12 +8,12 @@ enum LoginProvider: Sendable {
 }
 
 protocol LoginUseCaseProtocol: Sendable {
-    /// Signs the user in with `provider`. Returns `nil` when the user closes the sign-in sheet.
-    /// The view model adds the result to its `LoginViewData`.
-    func execute(provider: LoginProvider) async throws -> LoginViewData.Session?
+    /// Signs the user in with `provider`. Returns `true` when the user is signed in and `false` when they closed the
+    /// sign-in sheet. Throws when the sign-in fails.
+    func execute(provider: LoginProvider) async throws -> Bool
 }
 
-/// Business logic of Login: signs in through the Auth repository and maps its response.
+/// Business logic of Login: signs in through the Auth repository, which also saves the session.
 struct LoginUseCase: LoginUseCaseProtocol {
     private struct Request: AuthRequestProtocol {
         let provider: AuthProvider
@@ -28,16 +28,12 @@ struct LoginUseCase: LoginUseCaseProtocol {
         self.repository = dependencies.resolveRepository()
     }
 
-    func execute(provider: LoginProvider) async throws -> LoginViewData.Session? {
+    func execute(provider: LoginProvider) async throws -> Bool {
         do {
-            let response = try await repository.signIn(Request(provider: Self.authProvider(for: provider)))
-            return LoginViewData.Session(
-                userID: response.user.id,
-                name: response.user.name,
-                email: response.user.email
-            )
+            try await repository.signIn(Request(provider: Self.authProvider(for: provider)))
+            return true
         } catch AuthError.canceled {
-            return nil
+            return false
         }
     }
 
