@@ -60,6 +60,12 @@ public final class NetworkClient: @unchecked Sendable {
             .response
         switch response.result {
         case .success(let value):
+            NetworkLog.success(
+                method: method,
+                url: url,
+                response: response.response,
+                duration: response.metrics?.taskInterval.duration
+            )
             return value
         case .failure(let error):
             NetworkLog.failure(error, method: method, url: url, response: response.response, data: response.data)

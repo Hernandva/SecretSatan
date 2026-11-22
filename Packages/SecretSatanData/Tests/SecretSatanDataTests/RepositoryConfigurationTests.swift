@@ -8,6 +8,11 @@ struct RepositoryConfigurationTests {
         #expect(try configuration.url(for: "users").absoluteString == "https://api.example.com/v1/users")
     }
 
+    @Test func appBaseURLIsEmptyWithoutTheInfoPlistKey() {
+        // The test runner's Info.plist has no APIBaseURL.
+        #expect(RepositoryConfiguration.appBaseURL.isEmpty)
+    }
+
     @Test func rejectsAnEmptyBaseURL() {
         let configuration = RepositoryConfiguration(baseURL: "", serviceNames: ["users"])
         #expect(throws: NetworkError.missingBaseURL) { try configuration.url(for: "users") }

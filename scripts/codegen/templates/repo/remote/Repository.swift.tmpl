@@ -12,9 +12,10 @@ public protocol {{Repo}}RepositoryProtocol: Sendable {
 /// Talks to the {{Repo}} services.
 /// Flow: {{Repo}}RequestProtocol -> {{Repo}}RequestDAO -> {{Repo}}ResponseDAO -> {{Repo}}ResponseProtocol.
 public final class {{Repo}}Repository: {{Repo}}RepositoryProtocol {
-    /// Fill in the base URL and the names of the services this repository consumes.
+    /// Fill in the names of the services this repository consumes. The base URL is the app's
+    /// (`API_BASE_URL` in Configs/Config.xcconfig).
     public static let configuration = RepositoryConfiguration(
-        baseURL: "",
+        baseURL: RepositoryConfiguration.appBaseURL,
         serviceNames: []
     )
 

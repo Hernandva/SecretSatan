@@ -13,9 +13,9 @@ public protocol AuthRepositoryProtocol: Sendable {
 /// Flow: AuthRequestProtocol -> AuthRequestDAO -> provider service (Remote/<Provider>/) -> AuthCredentialDAO
 /// -> AuthTokenRequestDAO -> POST /auth/<provider> -> AuthResponseDAO -> AuthResponseProtocol.
 public final class AuthRepository: AuthRepositoryProtocol {
-    /// Fill in the base URL of the backend. Calls throw `NetworkError.missingBaseURL` while it is empty.
+    /// Services of the backend, on the base URL of the app's Info.plist (`API_BASE_URL` in Config.xcconfig).
     public static let configuration = RepositoryConfiguration(
-        baseURL: "https://secretsanta.hdvillamil.dev",
+        baseURL: RepositoryConfiguration.appBaseURL,
         serviceNames: AuthProvider.allCases.map(serviceName(for:))
     )
 

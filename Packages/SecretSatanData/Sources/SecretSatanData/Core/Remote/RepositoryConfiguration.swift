@@ -12,6 +12,16 @@ public struct RepositoryConfiguration: Sendable, Equatable {
         self.serviceNames = serviceNames
     }
 
+    /// Key of the app's Info.plist that holds the backend base URL. The app sets it from `API_BASE_URL` in
+    /// `Configs/Config.xcconfig`.
+    static let baseURLInfoKey = "APIBaseURL"
+
+    /// Backend base URL of the running app, read from its Info.plist. Empty when the key is missing (package
+    /// tests), so calls fail with `NetworkError.missingBaseURL` instead of reaching a wrong host.
+    public static var appBaseURL: String {
+        Bundle.main.object(forInfoDictionaryKey: baseURLInfoKey) as? String ?? ""
+    }
+
     /// Full URL of one of the declared services.
     func url(for serviceName: String) throws -> URL {
         guard !baseURL.isEmpty else { throw NetworkError.missingBaseURL }

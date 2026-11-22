@@ -68,12 +68,20 @@ Each one declares its endpoints in a static configuration, created empty to be f
 
 ```swift
 public static let configuration = RepositoryConfiguration(
-    baseURL: "",          // e.g. "https://api.example.com/v1"
+    baseURL: RepositoryConfiguration.appBaseURL,   // API_BASE_URL in Configs/Config.xcconfig
     serviceNames: []      // e.g. ["users", "users/search"]
 )
 ```
 
 Public API: `fetch(_ request:serviceName:) async throws -> any <Name>ResponseProtocol`.
+
+The backend base URL is not written in the package: the app sets `API_BASE_URL` in `Configs/Config.xcconfig`,
+`project.yml` copies it to the `APIBaseURL` key of its Info.plist, and every repository reads it with
+`baseURL: RepositoryConfiguration.appBaseURL`. Without that key (tests, previews) it is empty and calls throw
+`NetworkError.missingBaseURL`.
+
+`NetworkClient` logs every request, successful or not, under the `SecretSatanData` subsystem, `Network` category,
+**only in Debug builds**. It never logs request bodies, which may hold tokens.
 Calls to a service that is not in `serviceNames`, or made while `baseURL` is empty, throw a `NetworkError`.
 
 ### Repositories with several providers

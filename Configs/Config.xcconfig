@@ -1,0 +1,5 @@
+// Build settings of the SecretSatan app target (see project.yml › configFiles).
+// Values reach the app through SecretSatan/Resources/Info.plist and AppConfiguration.
+
+// Base URL of the SecretSatan backend. `$()` stops `//` from starting a comment in an xcconfig.
+API_BASE_URL = https:/$()/secretsanta.hdvillamil.dev

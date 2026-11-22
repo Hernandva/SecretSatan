@@ -38,8 +38,9 @@ the repository to the registry in `DATA.md`.
 
 ## 3. Fill it in
 
-- **Remote configuration:** set `baseURL` and `serviceNames` in `<Name>Repository.configuration`, only with values
-  the user gives you. Leave them empty otherwise and say so: calls throw `NetworkError` until they are set.
+- **Remote configuration:** set `serviceNames` in `<Name>Repository.configuration`, only with values the user
+  gives you. The base URL is the app's (`RepositoryConfiguration.appBaseURL`, from `API_BASE_URL` in
+  `Configs/Config.xcconfig`); change it there, never in the repository.
 - **Protocols:** add to the request and response protocols the fields the repository needs, and mirror them in the
   DAOs. For JSON, UserDefaults and Keychain both DAOs must use the same coding keys; for SwiftData, add the stored
   properties to `<Name>Entity`.

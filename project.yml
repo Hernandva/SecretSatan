@@ -23,6 +23,16 @@ targets:
     sources:
       - path: SecretSatan
         excludes: ["**/*.md", "**/.gitkeep"]
+    configFiles:
+      Debug: Configs/Config.xcconfig
+      Release: Configs/Config.xcconfig
+    info:
+      path: SecretSatan/Resources/Info.plist
+      properties:
+        # Read by AppConfiguration. The value comes from Configs/Config.xcconfig.
+        APIBaseURL: $(API_BASE_URL)
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
     entitlements:
       path: SecretSatan/SecretSatan.entitlements
       properties:

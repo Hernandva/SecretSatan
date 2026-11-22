@@ -6,8 +6,8 @@ Usage:
     python3 scripts/codegen/new_repo.py --name Settings --type local --storage userdefaults
 
 Every repository goes in Sources/SecretSatanData/Repositories/<Name>/, with its DAOs in DAO/.
-Remote repositories call services through Core/Remote/NetworkClient. Their configuration is left empty
-(baseURL "" and serviceNames []).
+Remote repositories call services through Core/Remote/NetworkClient. Their configuration uses the app's
+base URL (API_BASE_URL in Configs/Config.xcconfig) and leaves serviceNames [] to fill in.
 Local repositories store data on the device, with their storage in Local/, using one of: json (JSON files),
 swiftdata (SwiftData), userdefaults (UserDefaults) or keychain (Keychain).
 
@@ -97,7 +97,7 @@ def main() -> int:
     print(f"Repository {name} created ({folder_name}{', ' + storage if args.storage else ''}).")
     print("Files:\n  " + "\n  ".join(created))
     if args.type == "remote":
-        print(f"Next: fill in baseURL and serviceNames in {name}Repository.configuration, and the fields of "
+        print(f"Next: fill in serviceNames in {name}Repository.configuration, and the fields of "
               f"{name}RequestProtocol / {name}ResponseProtocol and their DAOs.")
     elif args.storage == "swiftdata":
         print(f"Next: declare the fields of {name}RequestProtocol / {name}ResponseProtocol, the stored properties "
