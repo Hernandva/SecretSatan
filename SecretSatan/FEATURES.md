@@ -148,6 +148,7 @@ adds the route to the parent coordinator and updates this file.
 |---|---|---|
 | `Login` | — (root) | — |
 | `Home` | Login | `AuthRepository`, `EventsRepository` |
+| `EventDetail` | Home | — |
 <!-- codegen:feature-registry:end -->
 
 ## App map
@@ -159,5 +160,6 @@ Which feature opens which. `A --> B` means feature A can open feature B.
 graph TD
     Login
     Login --> Home
+    Home --> EventDetail
 ```
 <!-- codegen:app-map:end -->

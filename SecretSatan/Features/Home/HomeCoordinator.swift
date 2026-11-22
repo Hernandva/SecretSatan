@@ -6,6 +6,8 @@ import SwiftUI
 final class HomeCoordinator: Coordinator {
     /// One case per feature that can be opened from Home.
     enum Route: Hashable {
+        /// Detail of the event selected in the list.
+        case eventDetail(HomeViewData.Event)
         // @codegen:routes
     }
 
@@ -24,6 +26,15 @@ final class HomeCoordinator: Coordinator {
 
     func destination(for route: Route) -> AnyView {
         switch route {
+        case .eventDetail(let event):
+            let detailEvent = EventDetailViewData.Event(
+                id: event.id,
+                name: event.name,
+                date: event.date,
+                participantCount: event.participantCount
+            )
+            let detailDependencies = EventDetailDependencies(event: detailEvent)
+            return AnyView(EventDetailCoordinator(dependencies: detailDependencies).start())
         // @codegen:destinations
         }
     }

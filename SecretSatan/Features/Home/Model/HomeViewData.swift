@@ -10,7 +10,7 @@ struct HomeViewData: Equatable, Sendable {
     }
 
     /// One row of the event list, returned by `EventsUseCase`.
-    struct Event: Equatable, Sendable, Identifiable {
+    struct Event: Hashable, Sendable, Identifiable {
         let id: String
         let name: String
         /// Day of the event, or `nil` when it has none.

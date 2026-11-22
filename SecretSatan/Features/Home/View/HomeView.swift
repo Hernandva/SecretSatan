@@ -55,12 +55,15 @@ struct HomeView: View {
         } else {
             DSListGroup(separatorInset: DSListRow.iconSeparatorInset) {
                 ForEach(viewModel.viewData.events) { event in
-                    DSListRow(
-                        event.name,
-                        subtitle: subtitle(for: event),
-                        icon: "gift",
-                        showsChevron: true
-                    )
+                    NavigationLink(value: HomeCoordinator.Route.eventDetail(event)) {
+                        DSListRow(
+                            event.name,
+                            subtitle: subtitle(for: event),
+                            icon: "gift",
+                            showsChevron: true
+                        )
+                    }
+                    .buttonStyle(.plain)
                     .dsSwipeToDelete(String(localized: "home.event.delete")) {
                         Task { await viewModel.deleteEvent(event) }
                     }
