@@ -6,6 +6,7 @@ import SwiftUI
 final class LoginCoordinator: Coordinator {
     /// One case per feature that can be opened from Login.
     enum Route: Hashable {
+        case home
         // @codegen:routes
     }
 
@@ -24,6 +25,8 @@ final class LoginCoordinator: Coordinator {
 
     func destination(for route: Route) -> AnyView {
         switch route {
+        case .home:
+            return AnyView(HomeCoordinator().start())
         // @codegen:destinations
         }
     }
