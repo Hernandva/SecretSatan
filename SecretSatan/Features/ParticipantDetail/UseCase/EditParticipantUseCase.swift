@@ -1,15 +1,21 @@
 import Foundation
 import SecretSatanData
 
+/// One change the user makes to the participant from ParticipantDetail.
+enum EditParticipantChange: Equatable, Sendable {
+    case name(String)
+    case phone(String)
+}
+
 protocol EditParticipantUseCaseProtocol: Sendable {
-    /// Renames `participant` and returns it as the backend saved it.
-    func execute(name: String, of participant: ParticipantDetailViewData.Participant) async throws
+    /// Saves the change to `participant` and returns it as the backend saved it.
+    func execute(_ change: EditParticipantChange, of participant: ParticipantDetailViewData.Participant) async throws
         -> ParticipantDetailViewData.Participant
 }
 
-/// Changes the name of the participant through the Participants repository (`PUT /events/:id/participants/:pid`)
+/// Changes the name or the phone of the participant through the Participants repository (`PUT /events/:id/participants/:pid`)
 /// and returns only the data the screen shows, mapped out of the SecretSatanData types.
-/// The `PUT` replaces every field, so it sends the phone and the guardian back unchanged.
+/// The `PUT` replaces every field, so it sends the fields that don't change back as they are.
 struct EditParticipantUseCase: EditParticipantUseCaseProtocol {
     private struct Request: ParticipantsRequestProtocol {
         let name: String
@@ -28,12 +34,12 @@ struct EditParticipantUseCase: EditParticipantUseCaseProtocol {
         self.eventId = dependencies.resolveEventId()
     }
 
-    func execute(name: String, of participant: ParticipantDetailViewData.Participant) async throws
+    func execute(_ change: EditParticipantChange, of participant: ParticipantDetailViewData.Participant) async throws
         -> ParticipantDetailViewData.Participant {
         let response = try await repository.updateParticipant(
             eventId: eventId,
             participantId: participant.id,
-            Request(name: name, phone: participant.phone, guardianId: participant.guardianId)
+            Self.request(for: change, of: participant)
         )
         return ParticipantDetailViewData.Participant(
             id: response.id,
@@ -42,5 +48,20 @@ struct EditParticipantUseCase: EditParticipantUseCaseProtocol {
             phone: response.phone,
             guardianId: response.guardianId
         )
+    }
+}
+
+extension EditParticipantUseCase {
+    /// Every field of the participant, with the one that changes replaced.
+    private static func request(
+        for change: EditParticipantChange,
+        of participant: ParticipantDetailViewData.Participant
+    ) -> Request {
+        switch change {
+        case .name(let name):
+            Request(name: name, phone: participant.phone, guardianId: participant.guardianId)
+        case .phone(let phone):
+            Request(name: participant.name, phone: phone, guardianId: participant.guardianId)
+        }
     }
 }

@@ -26,6 +26,7 @@ struct ParticipantDetailView: View {
             }
         }
         .sheet(isPresented: $viewModel.isEditingName) { nameSheet }
+        .sheet(isPresented: $viewModel.isEditingPhone) { phoneSheet }
         .task { await viewModel.load() }
     }
 
@@ -40,9 +41,7 @@ struct ParticipantDetailView: View {
                 .submitLabel(.done)
                 .onSubmit { Task { await viewModel.saveName() } }
 
-            if case .failed = viewModel.editState {
-                DSText(style: .footnote, color: DSColor.destructive).localized("participantDetail.editError")
-            }
+            editError
 
             Spacer(minLength: 0)
 
@@ -52,6 +51,35 @@ struct ParticipantDetailView: View {
         }
         .dsSheet(isSaving: viewModel.editState == .saving)
         .presentationDetents([.medium, .large])
+    }
+
+    /// Sheet with the current phone. "Guardar" turns active once the phone changes.
+    private var phoneSheet: some View {
+        VStack(alignment: .leading, spacing: DSSpacing.medium) {
+            DSText(style: .title).localized("participantDetail.editPhone.title")
+
+            DSTextField(value: $viewModel.draftPhone)
+                .localized("participantDetail.editPhone.placeholder")
+                .textContentType(.telephoneNumber)
+                .keyboardType(.phonePad)
+
+            editError
+
+            Spacer(minLength: 0)
+
+            DSButton { Task { await viewModel.savePhone() } }
+                .localized("participantDetail.save")
+                .disabled(!viewModel.canSavePhone)
+        }
+        .dsSheet(isSaving: viewModel.editState == .saving)
+        .presentationDetents([.medium, .large])
+    }
+
+    @ViewBuilder
+    private var editError: some View {
+        if case .failed = viewModel.editState {
+            DSText(style: .footnote, color: DSColor.destructive).localized("participantDetail.editError")
+        }
     }
 
     private func content(for participant: ParticipantDetailViewData.Participant) -> some View {

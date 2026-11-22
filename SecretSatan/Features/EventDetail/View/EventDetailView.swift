@@ -116,24 +116,21 @@ struct EventDetailView: View {
         .presentationDetents([.medium, .large])
     }
 
-    /// Sheet with the calendar. Picking another day saves it and closes the sheet.
+    /// Sheet with the calendar on the current date. "Guardar" turns active once another day is picked.
     private var dateSheet: some View {
         VStack(alignment: .leading, spacing: DSSpacing.medium) {
             DSText(style: .title).localized("eventDetail.editDate.title")
 
             DSCalendarPicker(date: $viewModel.draftDate)
                 .disabled(viewModel.editState == .saving)
-                .onChange(of: viewModel.draftDate) {
-                    Task { await viewModel.saveDraftDate() }
-                }
 
-            if viewModel.editState == .saving {
-                ProgressView()
-                    .frame(maxWidth: .infinity)
-            }
             editError
 
             Spacer(minLength: 0)
+
+            DSButton { Task { await viewModel.saveDate() } }
+                .localized("eventDetail.save")
+                .disabled(!viewModel.canSaveDate)
         }
         .dsSheet(isSaving: viewModel.editState == .saving)
         .presentationDetents([.large])

@@ -108,12 +108,16 @@ final class EventDetailViewModel {
         isEditingDate = true
     }
 
-    /// Saves `draftDate` when it is another day than the current date, and closes the picker.
-    func saveDraftDate() async {
-        if let current = viewData.event?.date, Calendar.current.isDate(current, inSameDayAs: draftDate) {
-            return
-        }
-        guard editState != .saving else { return }
+    /// `true` when the picked day differs from the current date (or the event has none) and nothing is being saved.
+    var canSaveDate: Bool {
+        guard editState != .saving else { return false }
+        guard let current = viewData.event?.date else { return true }
+        return !Calendar.current.isDate(current, inSameDayAs: draftDate)
+    }
+
+    /// Saves the picked day and closes the sheet.
+    func saveDate() async {
+        guard canSaveDate else { return }
         if await save(.date(draftDate)) {
             isEditingDate = false
         }

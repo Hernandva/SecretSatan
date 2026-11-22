@@ -11,7 +11,7 @@ final class ParticipantDetailViewModel {
         case failed(String)
     }
 
-    /// State of the change being saved from the name sheet.
+    /// State of the change being saved from the name or the phone sheet.
     enum EditState: Equatable {
         case idle
         case saving
@@ -27,6 +27,10 @@ final class ParticipantDetailViewModel {
     var isEditingName = false
     /// Name typed in the sheet. Starts as the current name.
     var draftName = ""
+    /// `true` while the sheet to edit the phone is shown.
+    var isEditingPhone = false
+    /// Phone typed in the sheet. Starts as the current phone, or empty when there is none.
+    var draftPhone = ""
 
     private let useCase: any ParticipantDetailUseCaseProtocol
     private let wardsUseCase: any ParticipantWardsUseCaseProtocol
@@ -67,27 +71,42 @@ final class ParticipantDetailViewModel {
 
     /// `true` when the typed name is not empty, differs from the current one and nothing is being saved.
     var canSaveName: Bool {
-        guard let newName = trimmedDraftName, editState != .saving else { return false }
+        guard let newName = Self.trimmed(draftName), editState != .saving else { return false }
         return newName != viewData.participant?.name
     }
 
-    /// Saves the typed name, puts the updated participant in `viewData.participant` and closes the sheet.
+    /// Saves the typed name and closes the sheet.
     func saveName() async {
-        guard canSaveName, let newName = trimmedDraftName, let participant = viewData.participant else { return }
-        editState = .saving
-        do {
-            viewData.participant = try await editParticipantUseCase.execute(name: newName, of: participant)
-            editState = .idle
+        guard canSaveName, let newName = Self.trimmed(draftName) else { return }
+        if await save(.name(newName)) {
             isEditingName = false
-        } catch {
-            editState = .failed(error.localizedDescription)
+        }
+    }
+
+    // MARK: - Phone
+
+    /// "Editar" beside the phone: opens the sheet with the current phone.
+    func startEditingPhone() {
+        draftPhone = viewData.participant?.phone ?? ""
+        editState = .idle
+        isEditingPhone = true
+    }
+
+    /// `true` when the typed phone is not empty, differs from the current one and nothing is being saved.
+    var canSavePhone: Bool {
+        guard let newPhone = Self.trimmed(draftPhone), editState != .saving else { return false }
+        return newPhone != viewData.participant?.phone
+    }
+
+    /// Saves the typed phone and closes the sheet.
+    func savePhone() async {
+        guard canSavePhone, let newPhone = Self.trimmed(draftPhone) else { return }
+        if await save(.phone(newPhone)) {
+            isEditingPhone = false
         }
     }
 
     // MARK: - Actions
-
-    /// "Editar" beside the phone. The sheet to change the phone is not built yet.
-    func startEditingPhone() {}
 
     /// "Añadir" in "Protegidos". The sheet to pick a ward is not built yet.
     func startAddingWard() {}
@@ -97,9 +116,23 @@ final class ParticipantDetailViewModel {
 
     // MARK: - Private
 
-    /// The typed name without surrounding spaces, or `nil` when it is empty.
-    private var trimmedDraftName: String? {
-        let trimmed = draftName.trimmingCharacters(in: .whitespacesAndNewlines)
+    /// `text` without surrounding spaces, or `nil` when it is empty.
+    private static func trimmed(_ text: String) -> String? {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         return trimmed.isEmpty ? nil : trimmed
+    }
+
+    /// Saves the change and puts the updated participant in `viewData.participant`. Returns `false` when it fails.
+    private func save(_ change: EditParticipantChange) async -> Bool {
+        guard let participant = viewData.participant else { return false }
+        editState = .saving
+        do {
+            viewData.participant = try await editParticipantUseCase.execute(change, of: participant)
+            editState = .idle
+            return true
+        } catch {
+            editState = .failed(error.localizedDescription)
+            return false
+        }
     }
 }
