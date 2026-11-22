@@ -32,6 +32,14 @@ final class HomeDependencies {
         EventsUseCase(dependencies: self)
     }
 
+    func resolveCreateEventUseCase() -> any CreateEventUseCaseProtocol {
+        CreateEventUseCase(dependencies: self)
+    }
+
+    func resolveNewEventViewModel() -> NewEventViewModel {
+        NewEventViewModel(dependencies: self)
+    }
+
     func resolveViewModel() -> HomeViewModel {
         HomeViewModel(dependencies: self)
     }

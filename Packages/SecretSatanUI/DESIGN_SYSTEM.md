@@ -31,9 +31,10 @@ Custom fonts named in the tokens must be added to the app bundle (`.ttf`/`.otf`)
 |---|---|
 | `DSScreen { … }` | Root container of every screen: scroll view, background and margins. |
 | `DSText(_:style:color:)` | Any text. |
-| `DSButton(_:style:icon:action:)` | Actions: 50 pt pill. Styles: `.primary`, `.secondary`, `.outline`, `.destructive`. Optional leading `icon`: `.symbol("apple.logo")` (SF Symbol) or `.glyph("G")`. |
+| `DSButton(_:style:icon:action:)` | Actions: 50 pt pill. Styles: `.primary`, `.secondary`, `.outline`, `.destructive`. Dimmed while `.disabled(true)`. Optional leading `icon`: `.symbol("apple.logo")` (SF Symbol) or `.glyph("G")`. |
 | `DSLinkButton(_:value:style:icon:)` | `DSButton` that pushes a screen with `NavigationLink(value:)`. Same pill, styles and icons. Use it for buttons that open a route. |
 | `DSTextField(_:value:)` | Text input. The first parameter is the placeholder. |
+| `DSDatePicker(_:date:placeholder:)` | Date input with a label. The date is optional: while it is `nil` it shows `placeholder` (already localised) as a button; tapping it picks today and shows the compact picker. |
 | `DSToggle(_:isOn:)` | Switch with a label. |
 | `DSSectionHeader(_:)` | Header above a group of rows. |
 | `DSListRow(_:subtitle:icon:showsChevron:)` | Row in a list. With `icon` (SF Symbol) it shows a 40 pt tile of the primary color and the headline / subheadline type. |

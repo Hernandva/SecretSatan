@@ -40,4 +40,13 @@ final class HomeViewModel {
             state = .failed(error.localizedDescription)
         }
     }
+
+    /// Reads the events again, e.g. after the "Nuevo evento" sheet closes. Keeps the list on screen while it loads,
+    /// and keeps the current one if the request fails.
+    func reloadEvents() async {
+        guard state == .loaded, viewData.user != nil else { return }
+        if let events = try? await eventsUseCase.execute() {
+            viewData.events = events
+        }
+    }
 }

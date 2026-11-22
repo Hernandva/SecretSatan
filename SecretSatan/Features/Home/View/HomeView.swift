@@ -4,9 +4,13 @@ import SwiftUI
 /// "Eventos": the user's events and the button to add a new one.
 struct HomeView: View {
     @State private var viewModel: HomeViewModel
+    @State private var isPresentingNewEvent = false
+    /// Kept to build the "Nuevo evento" sheet with the same dependencies.
+    private let dependencies: HomeDependencies
 
     /// Receives only the container and resolves the view model from it.
     init(dependencies: HomeDependencies) {
+        self.dependencies = dependencies
         _viewModel = State(initialValue: dependencies.resolveViewModel())
     }
 
@@ -26,10 +30,14 @@ struct HomeView: View {
         }
         .dsBottomBar {
             if viewModel.state == .loaded, viewModel.viewData.user != nil {
-                // Opens the screen to create an event once that feature exists.
-                DSButton(icon: .symbol("plus")) {}
+                DSButton(icon: .symbol("plus")) { isPresentingNewEvent = true }
                     .localized("home.addEvent")
             }
+        }
+        .sheet(isPresented: $isPresentingNewEvent) {
+            Task { await viewModel.reloadEvents() }
+        } content: {
+            NewEventView(dependencies: dependencies)
         }
         .task { await viewModel.load() }
     }

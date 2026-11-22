@@ -76,7 +76,11 @@ struct DSButtonLabel: View {
 
 /// Pill shape and colors of each `DSButton.Style`. Shared by `DSButton` and `DSLinkButton`.
 struct DSButtonStyle: ButtonStyle {
+    /// Opacity of a disabled button, so it reads as inactive.
+    static let disabledOpacity: Double = 0.4
+
     let style: DSButton.Style
+    @Environment(\.isEnabled) private var isEnabled
 
     func makeBody(configuration: Configuration) -> some View {
         let shape = RoundedRectangle(cornerRadius: DSRadius.radiusPill, style: .continuous)
@@ -88,7 +92,7 @@ struct DSButtonStyle: ButtonStyle {
                     shape.strokeBorder(DSColor.accent, lineWidth: 1)
                 }
             }
-            .opacity(configuration.isPressed ? 0.8 : 1)
+            .opacity(isEnabled ? (configuration.isPressed ? 0.8 : 1) : Self.disabledOpacity)
             .contentShape(shape)
     }
 
