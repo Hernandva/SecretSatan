@@ -31,7 +31,7 @@ Custom fonts named in the tokens must be added to the app bundle (`.ttf`/`.otf`)
 |---|---|
 | `DSScreen { … }` | Root container of every screen: scroll view, background and margins. |
 | `DSText(_:style:color:)` | Any text. |
-| `DSButton(_:style:icon:action:)` | Actions: 50 pt pill. Styles: `.primary`, `.secondary`, `.outline`, `.destructive`. Dimmed while `.disabled(true)`. Optional leading `icon`: `.symbol("apple.logo")` (SF Symbol) or `.glyph("G")`. |
+| `DSButton(_:style:size:icon:action:)` | Actions: pill. Styles: `.primary`, `.secondary`, `.outline`, `.destructive`. Sizes: `.regular` (full width, 50 pt, the default) and `.compact` (as wide as its text, 44 pt, e.g. "Editar" beside a title or a field). Dimmed while `.disabled(true)`. Optional leading `icon`: `.symbol("apple.logo")` (SF Symbol) or `.glyph("G")`. |
 | `DSLinkButton(_:value:style:icon:)` | `DSButton` that pushes a screen with `NavigationLink(value:)`. Same pill, styles and icons. Use it for buttons that open a route. |
 | `DSTextField(_:value:)` | Text input. The first parameter is the placeholder. |
 | `DSDatePicker(_:date:placeholder:)` | Date input with a label. The date is optional: while it is `nil` it shows `placeholder` (already localised) as a button; tapping it picks today and shows the compact picker. |
@@ -39,6 +39,7 @@ Custom fonts named in the tokens must be added to the app bundle (`.ttf`/`.otf`)
 | `DSCalendarPicker(date:)` | Month calendar to pick a day, on a rounded surface. For sheets or screens whose only task is picking the day; in a form use `DSDatePicker`. |
 | `DSIconButton(_:systemName:action:)` | Icon-only button (SF Symbol in the primary color) with a 44 pt tap target, e.g. a pencil that edits a field. `.localized(_:)` sets its accessibility label. |
 | `DSSectionHeader(_:)` | Header above a group of rows. |
+| `DSTextButton(_:icon:action:)` | Text-only button in the primary color with an optional leading SF Symbol and a 44 pt tap target, e.g. "+ Añadir" beside a `DSSectionHeader`. |
 | `DSListRow(_:subtitle:icon:initials:showsChevron:)` | Row in a list. With `icon` (SF Symbol) it shows a 40 pt tile of the primary color and the headline / subheadline type. With `initials` it shows them on a 40 pt round avatar (`fillSecondary`), as in the participant list. |
 | `DSListGroup(separatorInset:) { … }` | Rows on a rounded surface (`radiusGroup`) with separators between them. Use `DSListRow.iconSeparatorInset` for rows with an icon. |
 | `.dsBottomBar { … }` | Pins the screen's main button to the bottom, above the safe area, with the screen margins and background. |

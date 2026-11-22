@@ -1,12 +1,21 @@
 import SwiftUI
 
-/// Full-width pill button with the design-system styles applied and an optional leading icon.
+/// Pill button with the design-system styles applied and an optional leading icon.
+/// `.regular` is full width and 50 pt tall; `.compact` hugs its text and is 44 pt tall, e.g. "Editar" next to a field.
 public struct DSButton: View, DSLocalizableText {
     public enum Style: Sendable {
         case primary
         case secondary
         case outline
         case destructive
+    }
+
+    /// Width and height of the button.
+    public enum Size: Sendable {
+        /// Full width, 50 pt tall: the main actions of a screen.
+        case regular
+        /// As wide as its text, 44 pt tall: inline actions next to a title or a field.
+        case compact
     }
 
     /// Leading icon of the button: an SF Symbol or a single text glyph.
@@ -20,34 +29,38 @@ public struct DSButton: View, DSLocalizableText {
 
     public var text: String
     private let style: Style
+    private let size: Size
     private let icon: Icon?
     private let action: @MainActor () -> Void
 
     public init(
         _ text: String = "",
         style: Style = .primary,
+        size: Size = .regular,
         icon: Icon? = nil,
         action: @escaping @MainActor () -> Void
     ) {
         self.text = text
         self.style = style
+        self.size = size
         self.icon = icon
         self.action = action
     }
 
     public var body: some View {
         Button(action: action) {
-            DSButtonLabel(text: text, icon: icon)
+            DSButtonLabel(text: text, icon: icon, size: size)
         }
         .buttonStyle(DSButtonStyle(style: style))
     }
 }
 
-/// Content of every design-system button: optional icon and text on a full-width, 50 pt row.
-/// Shared by `DSButton` and `DSLinkButton`.
+/// Content of every design-system button: optional icon and text on a full-width, 50 pt row,
+/// or on a 44 pt row as wide as the text for `.compact`. Shared by `DSButton` and `DSLinkButton`.
 struct DSButtonLabel: View {
     let text: String
     let icon: DSButton.Icon?
+    var size: DSButton.Size = .regular
 
     var body: some View {
         HStack(spacing: DSSpacing.small) {
@@ -55,8 +68,12 @@ struct DSButtonLabel: View {
             Text(text)
         }
         .font(DSFont.bodyStrong)
-        .frame(maxWidth: .infinity, minHeight: DSButton.height)
-        .padding(.horizontal, DSSpacing.medium)
+        .frame(maxWidth: size == .regular ? .infinity : nil, minHeight: minHeight)
+        .padding(.horizontal, size == .regular ? DSSpacing.medium : DSSpacing.space5)
+    }
+
+    private var minHeight: CGFloat {
+        size == .regular ? DSButton.height : DSSpacing.tapMin
     }
 
     @ViewBuilder private var iconView: some View {
@@ -120,6 +137,7 @@ struct DSButtonStyle: ButtonStyle {
         DSButton("Outline", style: .outline, icon: .glyph("G")) {}
         DSButton("Secondary", style: .secondary) {}
         DSButton("Delete", style: .destructive) {}
+        DSButton("Edit", style: .secondary, size: .compact) {}
     }
     .padding()
 }

@@ -1,6 +1,7 @@
 import Foundation
 
-/// Public participant the Participants repository returns after adding or editing one.
+/// Public participant the Participants repository returns after adding or editing one, and in the lists of
+/// `fetchWards(eventId:participantId:)` and `fetchExcluded(eventId:participantId:)`.
 public protocol ParticipantsResponseProtocol: Sendable {
     var id: String { get }
     var name: String { get }

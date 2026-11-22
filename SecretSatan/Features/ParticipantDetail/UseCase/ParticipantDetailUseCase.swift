@@ -6,7 +6,7 @@ protocol ParticipantDetailUseCaseProtocol: Sendable {
 }
 
 /// Business logic of ParticipantDetail: hands out the participant selected in EventDetail, passed in by the route.
-/// To read more of it from the backend, resolve `ParticipantsRepositoryProtocol` here.
+/// Its wards and exclusions come from `ParticipantWardsUseCase` and `ParticipantExclusionsUseCase`.
 struct ParticipantDetailUseCase: ParticipantDetailUseCaseProtocol {
     private let participant: ParticipantDetailViewData.Participant
 

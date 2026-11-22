@@ -27,14 +27,27 @@ final class EventDetailCoordinator: Coordinator {
     func destination(for route: Route) -> AnyView {
         switch route {
         case .participantDetail(let participant):
-            let detailParticipant = ParticipantDetailViewData.Participant(
-                id: participant.id,
-                name: participant.name,
-                initials: participant.initials
+            let detailParticipant = Self.detailParticipant(from: participant)
+            let detailDependencies = ParticipantDetailDependencies(
+                eventId: dependencies.resolveEvent().id,
+                participant: detailParticipant
             )
-            let detailDependencies = ParticipantDetailDependencies(participant: detailParticipant)
             return AnyView(ParticipantDetailCoordinator(dependencies: detailDependencies).start())
         // @codegen:destinations
         }
+    }
+}
+
+private extension EventDetailCoordinator {
+    /// Copies the selected participant into the data of ParticipantDetail, so neither feature uses the other's types.
+    static func detailParticipant(
+        from participant: EventDetailViewData.Participant
+    ) -> ParticipantDetailViewData.Participant {
+        ParticipantDetailViewData.Participant(
+            id: participant.id,
+            name: participant.name,
+            initials: participant.initials,
+            phone: participant.phone
+        )
     }
 }

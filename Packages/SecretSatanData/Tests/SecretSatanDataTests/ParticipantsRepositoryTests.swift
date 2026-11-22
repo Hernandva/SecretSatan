@@ -124,6 +124,58 @@ struct ParticipantsRepositoryTests {
         #expect(sent.url?.absoluteString == "https://backend.test/events/E1/participants/\(Self.childId)")
     }
 
+    @Test func fetchesTheWardsOfAGuardian() async throws {
+        Self.stub(status: 200, body: """
+        [
+          {"id":"\(Self.childId)","name":"Lucía","phone":null,"guardianId":"\(Self.guardianId)"},
+          {"id":"11111111-AAAA-4BBB-8CCC-000000000004","name":"Pablo","phone":null,"guardianId":"\(Self.guardianId)"}
+        ]
+        """)
+
+        let wards = try await Self.repository().fetchWards(eventId: Self.eventId, participantId: Self.guardianId)
+
+        let sent = try #require(ParticipantsStubURLProtocol.lastRequest)
+        #expect(sent.httpMethod == "GET")
+        #expect(sent.url?.absoluteString == "https://backend.test/events/E1/participants/\(Self.guardianId)/wards")
+        #expect(sent.value(forHTTPHeaderField: "Authorization") == "Bearer session-token")
+        #expect(wards.map(\.name) == ["Lucía", "Pablo"])
+        #expect(wards.allSatisfy { $0.phone == nil && $0.guardianId == Self.guardianId })
+    }
+
+    @Test func fetchesNoWardsForAParticipantWhoIsNobodysGuardian() async throws {
+        Self.stub(status: 200, body: "[]")
+
+        let wards = try await Self.repository().fetchWards(eventId: Self.eventId, participantId: Self.childId)
+
+        #expect(wards.isEmpty)
+    }
+
+    @Test func fetchesTheParticipantsItMustNotBeAssigned() async throws {
+        Self.stub(status: 200, body: """
+        [
+          {"id":"11111111-AAAA-4BBB-8CCC-000000000002","name":"Bruno","phone":"+34600333444","guardianId":null},
+          {"id":"11111111-AAAA-4BBB-8CCC-000000000005","name":"Carla","phone":"+34600555666","guardianId":null}
+        ]
+        """)
+
+        let excluded = try await Self.repository().fetchExcluded(eventId: Self.eventId, participantId: Self.guardianId)
+
+        let sent = try #require(ParticipantsStubURLProtocol.lastRequest)
+        #expect(sent.httpMethod == "GET")
+        #expect(sent.url?.absoluteString == "https://backend.test/events/E1/participants/\(Self.guardianId)/excluded")
+        #expect(excluded.map(\.name) == ["Bruno", "Carla"])
+        #expect(excluded.map(\.phone) == ["+34600333444", "+34600555666"])
+        #expect(excluded.allSatisfy { $0.guardianId == nil })
+    }
+
+    @Test func throwsNotFoundForTheExclusionsOfAParticipantOfAnotherEvent() async {
+        Self.stub(status: 404, body: #"{"error":true,"reason":"Not Found"}"#)
+
+        await #expect(throws: NetworkError.server(statusCode: 404, reason: "Not Found")) {
+            try await Self.repository().fetchExcluded(eventId: Self.eventId, participantId: "missing")
+        }
+    }
+
     @Test func throwsTheReasonOfTheBackendWhenThereIsNoPhoneOrGuardian() async {
         let reason = "Indica un teléfono o un tutor que reciba el enlace."
         Self.stub(status: 400, body: #"{"error":true,"reason":"\#(reason)"}"#)
@@ -158,6 +210,9 @@ struct ParticipantsRepositoryTests {
         ParticipantsStubURLProtocol.lastRequest = nil
         await #expect(throws: ParticipantsError.notSignedIn) {
             try await Self.repository(session: nil).deleteParticipant(eventId: Self.eventId, participantId: "P1")
+        }
+        await #expect(throws: ParticipantsError.notSignedIn) {
+            try await Self.repository(session: nil).fetchWards(eventId: Self.eventId, participantId: "P1")
         }
         #expect(ParticipantsStubURLProtocol.lastRequest == nil)
     }

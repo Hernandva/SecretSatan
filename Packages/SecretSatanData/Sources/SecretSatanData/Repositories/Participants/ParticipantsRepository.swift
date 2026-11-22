@@ -29,6 +29,14 @@ public protocol ParticipantsRepositoryProtocol: Sendable {
 
     /// `DELETE /events/:id/participants/:pid`: removes the participant and its exclusions. Only before the draw.
     func deleteParticipant(eventId: String, participantId: String) async throws
+
+    /// `GET /events/:id/participants/:pid/wards`: the participants whose `guardianId` is `participantId`,
+    /// e.g. the children whose link this participant receives. Empty when it is nobody's guardian.
+    func fetchWards(eventId: String, participantId: String) async throws -> [any ParticipantsResponseProtocol]
+
+    /// `GET /events/:id/participants/:pid/excluded`: the participants `participantId` must not be assigned in the
+    /// draw, the `receiverId` of every exclusion whose `giverId` is `participantId`. Empty when it has none.
+    func fetchExcluded(eventId: String, participantId: String) async throws -> [any ParticipantsResponseProtocol]
 }
 
 /// Talks to the participant services of the backend, authenticated with the session token of the Auth repository.
@@ -39,6 +47,10 @@ public final class ParticipantsRepository: ParticipantsRepositoryProtocol {
     static let serviceName = "events"
     /// Path segment after the event id.
     static let participantsPath = "participants"
+    /// Path segment after the participant id that lists its wards.
+    static let wardsPath = "wards"
+    /// Path segment after the participant id that lists the participants it must not be assigned.
+    static let excludedPath = "excluded"
 
     /// Services of the backend, on the base URL of the app's Info.plist (`API_BASE_URL` in Config.xcconfig).
     public static let configuration = RepositoryConfiguration(
@@ -103,6 +115,37 @@ public final class ParticipantsRepository: ParticipantsRepositoryProtocol {
     public func deleteParticipant(eventId: String, participantId: String) async throws {
         let url = try participantsURL(eventId: eventId).appendingPathComponent(participantId)
         try await client.send(url, method: .delete, headers: try await authorizationHeaders())
+    }
+
+    public func fetchWards(
+        eventId: String,
+        participantId: String
+    ) async throws -> [any ParticipantsResponseProtocol] {
+        try await fetchParticipants(eventId: eventId, participantId: participantId, path: Self.wardsPath)
+    }
+
+    public func fetchExcluded(
+        eventId: String,
+        participantId: String
+    ) async throws -> [any ParticipantsResponseProtocol] {
+        try await fetchParticipants(eventId: eventId, participantId: participantId, path: Self.excludedPath)
+    }
+
+    /// `GET events/:id/participants/:pid/<path>`, which answers with a list of participants.
+    private func fetchParticipants(
+        eventId: String,
+        participantId: String,
+        path: String
+    ) async throws -> [any ParticipantsResponseProtocol] {
+        let url = try participantsURL(eventId: eventId)
+            .appendingPathComponent(participantId)
+            .appendingPathComponent(path)
+        let participants: [ParticipantsResponseDAO] = try await client.request(
+            url,
+            method: .get,
+            headers: try await authorizationHeaders()
+        )
+        return participants
     }
 
     /// `events/:id/participants`.

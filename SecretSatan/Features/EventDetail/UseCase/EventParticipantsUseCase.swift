@@ -28,6 +28,6 @@ struct EventParticipantsUseCase: EventParticipantsUseCaseProtocol {
 private extension EventParticipantsUseCase {
     /// Maps one participant of the repository into a row of the participant list.
     static func participant(from response: any EventParticipantResponseProtocol) -> EventDetailViewData.Participant {
-        EventDetailViewData.Participant(id: response.id, name: response.name)
+        EventDetailViewData.Participant(id: response.id, name: response.name, phone: response.phone)
     }
 }

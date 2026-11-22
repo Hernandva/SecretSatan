@@ -16,19 +16,18 @@ struct EventDetailViewData: Equatable, Sendable {
     struct Participant: Hashable, Sendable, Identifiable {
         let id: String
         let name: String
+        /// `nil` for participants without a phone, such as children.
+        let phone: String?
         /// Up to two letters shown on the avatar, e.g. "LM" for "Lucía Martín".
         let initials: String
 
         /// Builds the initials from the first letter of the first two words of `name`:
         /// "Lucía Martín" -> "LM", "Pablo" -> "P".
-        init(id: String, name: String) {
+        init(id: String, name: String, phone: String? = nil) {
             self.id = id
             self.name = name
-            self.initials = name.split(separator: " ")
-                .prefix(2)
-                .compactMap(\.first)
-                .map { String($0).uppercased() }
-                .joined()
+            self.phone = phone
+            self.initials = name.initials
         }
     }
 
