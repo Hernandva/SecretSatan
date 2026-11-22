@@ -194,13 +194,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Phone (optional)"
+            "value" : "Phone"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Teléfono (opcional)"
+            "value" : "Teléfono"
           }
         }
       }

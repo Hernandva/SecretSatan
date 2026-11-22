@@ -1,11 +1,10 @@
 import Foundation
 import SecretSatanData
 
-/// What the "Nuevo participante" sheet sends. `name` is required.
+/// What the "Nuevo participante" sheet sends. Both fields are required.
 struct NewParticipantInput: Equatable, Sendable {
     let name: String
-    /// `nil` when the user leaves the phone empty.
-    let phone: String?
+    let phone: String
 }
 
 /// Errors of `NewParticipantUseCase` that the sheet can show.
@@ -26,6 +25,7 @@ struct NewParticipantUseCase: NewParticipantUseCaseProtocol {
     private struct Request: ParticipantsRequestProtocol {
         let name: String
         let phone: String?
+        /// The sheet always asks for a phone, so the participant never needs a guardian.
         let guardianId: String? = nil
     }
 

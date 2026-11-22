@@ -122,8 +122,8 @@ struct EventDetailView: View {
         .presentationDetents([.large])
     }
 
-    /// "Nuevo participante" sheet: name (required) and phone (optional). "Guardar" turns active once the name is
-    /// filled in, adds the participant and closes the sheet.
+    /// "Nuevo participante" sheet: name and phone, both required. "Guardar" turns active once both are filled in,
+    /// adds the participant and closes the sheet.
     private var participantSheet: some View {
         VStack(alignment: .leading, spacing: DSSpacing.medium) {
             DSText(style: .title).localized("eventDetail.newParticipant.title")

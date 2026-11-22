@@ -45,7 +45,7 @@ final class EventDetailViewModel {
     var isAddingParticipant = false
     /// Name typed in the "Nuevo participante" sheet. Required.
     var participantName = ""
-    /// Phone typed in the "Nuevo participante" sheet. Optional.
+    /// Phone typed in the "Nuevo participante" sheet. Required.
     var participantPhone = ""
 
     private let useCase: any EventDetailUseCaseProtocol
@@ -122,17 +122,16 @@ final class EventDetailViewModel {
         isAddingParticipant = true
     }
 
-    /// `true` when the name is filled in and nothing is being saved.
+    /// `true` when the name and the phone are filled in and nothing is being saved.
     var canSaveParticipant: Bool {
-        Self.trimmed(participantName) != nil && addParticipantState != .saving
+        newParticipantInput != nil && addParticipantState != .saving
     }
 
     /// Adds the participant, appends it to the list and closes the sheet.
     func saveParticipant() async {
-        guard canSaveParticipant, let name = Self.trimmed(participantName) else { return }
+        guard canSaveParticipant, let input = newParticipantInput else { return }
         addParticipantState = .saving
         do {
-            let input = NewParticipantInput(name: name, phone: Self.trimmed(participantPhone))
             viewData.participants.append(try await newParticipantUseCase.execute(input))
             addParticipantState = .idle
             isAddingParticipant = false
@@ -144,6 +143,12 @@ final class EventDetailViewModel {
     }
 
     // MARK: - Private
+
+    /// The data to send, or `nil` while the name or the phone is empty.
+    private var newParticipantInput: NewParticipantInput? {
+        guard let name = Self.trimmed(participantName), let phone = Self.trimmed(participantPhone) else { return nil }
+        return NewParticipantInput(name: name, phone: phone)
+    }
 
     /// `text` without surrounding spaces, or `nil` when it is empty.
     private static func trimmed(_ text: String) -> String? {
