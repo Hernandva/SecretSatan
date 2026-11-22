@@ -1,8 +1,10 @@
 import Foundation
 
-/// Wire format of the Auth request. Internal to SecretSatanData: never exposed to the app.
+/// Sign-in request handed to a provider service. Internal to SecretSatanData: never exposed to the app.
 struct AuthRequestDAO: Encodable, Sendable {
+    let provider: AuthProvider
+
     init(_ request: some AuthRequestProtocol) {
-        // Copy the fields of the request protocol into encodable properties.
+        self.provider = request.provider
     }
 }

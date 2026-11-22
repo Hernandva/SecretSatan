@@ -10,7 +10,7 @@ struct JSONFileStore: LocalStore {
 
     func read(key: String) throws -> Data? {
         let url = try fileURL(for: key)
-        guard FileManager.default.fileExists(atPath: url.path()) else { return nil }
+        guard FileManager.default.fileExists(atPath: url.path(percentEncoded: false)) else { return nil }
         return try Data(contentsOf: url)
     }
 
@@ -22,7 +22,7 @@ struct JSONFileStore: LocalStore {
 
     func remove(key: String) throws {
         let url = try fileURL(for: key)
-        guard FileManager.default.fileExists(atPath: url.path()) else { return }
+        guard FileManager.default.fileExists(atPath: url.path(percentEncoded: false)) else { return }
         try FileManager.default.removeItem(at: url)
     }
 

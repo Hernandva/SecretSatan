@@ -22,19 +22,28 @@ final class LoginViewModel {
         self.useCase = dependencies.resolveUseCase()
     }
 
-    func load() async {
+    /// "Continuar con Apple".
+    func continueWithApple() async {
+        await signIn(with: .apple)
+    }
+
+    /// "Continuar con Google". Fails until SecretSatanData has a Google service.
+    func continueWithGoogle() async {
+        await signIn(with: .google)
+    }
+
+    private func signIn(with provider: LoginProvider) async {
+        guard state != .loading else { return }
         state = .loading
         do {
-            viewData.content = try await useCase.execute()
+            guard let session = try await useCase.execute(provider: provider) else {
+                state = .idle
+                return
+            }
+            viewData.session = session
             state = .loaded
         } catch {
             state = .failed(error.localizedDescription)
         }
     }
-
-    /// "Continuar con Apple". Sign in with Apple is not connected yet.
-    func continueWithApple() {}
-
-    /// "Continuar con Google". Google sign-in is not connected yet.
-    func continueWithGoogle() {}
 }

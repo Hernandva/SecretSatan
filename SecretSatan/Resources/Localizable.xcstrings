@@ -1,23 +1,6 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "login.continueWithApple" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Continue with Apple"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Continuar con Apple"
-          }
-        }
-      }
-    },
     "login.continueWithGoogle" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -31,6 +14,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Continuar con Google"
+          }
+        }
+      }
+    },
+    "login.error" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't sign in. Please try again."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo iniciar sesión. Inténtalo de nuevo."
           }
         }
       }

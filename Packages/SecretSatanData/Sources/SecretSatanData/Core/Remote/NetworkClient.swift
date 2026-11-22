@@ -9,6 +9,11 @@ enum RequestMethod: Sendable {
     case patch
     case delete
 
+    /// Verb as sent on the wire, e.g. "POST".
+    var name: String {
+        alamofireMethod.rawValue
+    }
+
     var alamofireMethod: HTTPMethod {
         switch self {
         case .get: .get
@@ -42,7 +47,7 @@ public final class NetworkClient: @unchecked Sendable {
         let encoder: any ParameterEncoder = method == .get
             ? URLEncodedFormParameterEncoder.default
             : JSONParameterEncoder.default
-        return try await session
+        let response = await session
             .request(
                 url,
                 method: method.alamofireMethod,
@@ -52,6 +57,13 @@ public final class NetworkClient: @unchecked Sendable {
             )
             .validate()
             .serializingDecodable(Response.self)
-            .value
+            .response
+        switch response.result {
+        case .success(let value):
+            return value
+        case .failure(let error):
+            NetworkLog.failure(error, method: method, url: url, response: response.response, data: response.data)
+            throw error
+        }
     }
 }

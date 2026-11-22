@@ -16,7 +16,16 @@ public struct RepositoryConfiguration: Sendable, Equatable {
     func url(for serviceName: String) throws -> URL {
         guard !baseURL.isEmpty else { throw NetworkError.missingBaseURL }
         guard serviceNames.contains(serviceName) else { throw NetworkError.unknownService(serviceName) }
-        guard let base = URL(string: baseURL) else { throw NetworkError.invalidURL(baseURL) }
+        // Without a scheme ("api.example.com") URL(string:) still succeeds, but as a relative path that
+        // URLSession rejects with NSURLErrorUnsupportedURL (-1002).
+        guard
+            let base = URL(string: baseURL),
+            let scheme = base.scheme?.lowercased(),
+            ["http", "https"].contains(scheme),
+            base.host() != nil
+        else {
+            throw NetworkError.invalidURL(baseURL)
+        }
         return base.appendingPathComponent(serviceName)
     }
 }

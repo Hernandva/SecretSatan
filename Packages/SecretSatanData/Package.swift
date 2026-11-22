@@ -17,7 +17,7 @@ let package = Package(
         ),
         .testTarget(
             name: "SecretSatanDataTests",
-            dependencies: ["SecretSatanData"]
+            dependencies: ["SecretSatanData", .product(name: "Alamofire", package: "Alamofire")]
         )
     ],
     swiftLanguageModes: [.v6]

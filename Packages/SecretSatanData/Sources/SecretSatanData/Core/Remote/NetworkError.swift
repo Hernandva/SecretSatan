@@ -5,6 +5,6 @@ public enum NetworkError: Error, Equatable, Sendable {
     case missingBaseURL
     /// The service name is not listed in the repository's `configuration.serviceNames`.
     case unknownService(String)
-    /// The base URL cannot be parsed.
+    /// The base URL cannot be parsed, or it has no `http`/`https` scheme or no host.
     case invalidURL(String)
 }

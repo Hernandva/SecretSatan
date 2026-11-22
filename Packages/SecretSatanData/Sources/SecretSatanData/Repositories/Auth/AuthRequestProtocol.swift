@@ -1,5 +1,13 @@
 import Foundation
 
-/// Public data the app must provide to call the Auth repository.
-/// Declare here the fields the services need; AuthRequestDAO turns them into the wire format.
-public protocol AuthRequestProtocol: Sendable {}
+/// Identity providers the Auth repository can sign in with.
+public enum AuthProvider: String, Codable, CaseIterable, Sendable {
+    case apple
+    case google
+}
+
+/// Public data the app must provide to sign in through the Auth repository.
+public protocol AuthRequestProtocol: Sendable {
+    /// Provider that performs the sign-in.
+    var provider: AuthProvider { get }
+}

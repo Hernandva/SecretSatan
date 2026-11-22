@@ -13,6 +13,17 @@ struct RepositoryConfigurationTests {
         #expect(throws: NetworkError.missingBaseURL) { try configuration.url(for: "users") }
     }
 
+    @Test(arguments: ["api.example.com", "api.example.com/", "ftp://api.example.com", "https://"])
+    func rejectsABaseURLWithoutHTTPSchemeOrHost(baseURL: String) {
+        let configuration = RepositoryConfiguration(baseURL: baseURL, serviceNames: ["users"])
+        #expect(throws: NetworkError.invalidURL(baseURL)) { try configuration.url(for: "users") }
+    }
+
+    @Test func keepsATrailingSlashOutOfTheServiceURL() throws {
+        let configuration = RepositoryConfiguration(baseURL: "https://api.example.com/", serviceNames: ["auth/apple"])
+        #expect(try configuration.url(for: "auth/apple").absoluteString == "https://api.example.com/auth/apple")
+    }
+
     @Test func rejectsAnUndeclaredService() {
         let configuration = RepositoryConfiguration(baseURL: "https://api.example.com", serviceNames: [])
         #expect(throws: NetworkError.unknownService("users")) { try configuration.url(for: "users") }

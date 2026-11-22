@@ -83,6 +83,11 @@ forwards each call to the internal service of the provider, in `Remote/<Provider
 `internal`, conforms to one internal service protocol and is registered in `<Name>Repository.init()`. A provider
 without a service throws an `unsupportedProvider` error of the repository.
 
+When the provider only proves who the user is and the backend opens the session (as in `Auth`), the repository
+does one more step after the provider service: it sends the provider's credential to its own service in
+`configuration.serviceNames` through `NetworkClient` (e.g. `POST auth/apple`, `POST auth/google`) and returns that
+response. It resolves the service URL before showing any provider UI, so an incomplete configuration fails first.
+
 ## Local repositories
 
 Their storage lives in `Local/` and uses one technology, chosen when the repository is created:

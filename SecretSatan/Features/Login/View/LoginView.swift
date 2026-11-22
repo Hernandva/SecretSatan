@@ -14,16 +14,21 @@ struct LoginView: View {
             header
                 .frame(maxHeight: .infinity)
 
-            DSButton(icon: .symbol("apple.logo")) {
-                viewModel.continueWithApple()
+            if case .failed = viewModel.state {
+                DSText(style: .footnote, color: DSColor.destructive).localized("login.error")
+                    .multilineTextAlignment(.center)
             }
-            .localized("login.continueWithApple")
+
+            DSAppleSignInButton(type: .continue) {
+                Task { await viewModel.continueWithApple() }
+            }
 
             DSButton(style: .outline, icon: .glyph("G")) {
-                viewModel.continueWithGoogle()
+                Task { await viewModel.continueWithGoogle() }
             }
             .localized("login.continueWithGoogle")
         }
+        .disabled(viewModel.state == .loading)
         .padding(.horizontal, DSSpacing.medium)
         .padding(.bottom, DSSpacing.large)
         .background(DSColor.background.ignoresSafeArea())

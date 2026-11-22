@@ -1,20 +1,50 @@
 import Foundation
+import SecretSatanData
 
-protocol LoginUseCaseProtocol: Sendable {
-    /// Returns only the data of the response. The view model adds it to its `LoginViewData`.
-    func execute() async throws -> LoginViewData.Content
+/// Sign-in options of the Login screen.
+enum LoginProvider: Sendable {
+    case apple
+    case google
 }
 
-/// Business logic of Login.
-/// When the feature needs a SecretSatanData repository, add a `resolve<Name>()` function to LoginDependencies,
-/// resolve it in `init(dependencies:)` and map its public response protocol into the type this use case returns.
+protocol LoginUseCaseProtocol: Sendable {
+    /// Signs the user in with `provider`. Returns `nil` when the user closes the sign-in sheet.
+    /// The view model adds the result to its `LoginViewData`.
+    func execute(provider: LoginProvider) async throws -> LoginViewData.Session?
+}
+
+/// Business logic of Login: signs in through the Auth repository and maps its response.
 struct LoginUseCase: LoginUseCaseProtocol {
+    private struct Request: AuthRequestProtocol {
+        let provider: AuthProvider
+    }
+
+    private let repository: any AuthRepositoryProtocol
+
     /// Receives only the container and resolves what it needs from it.
     /// `LoginDependencies` lives on the main actor, so this init does too.
     @MainActor
-    init(dependencies: LoginDependencies) {}
+    init(dependencies: LoginDependencies) {
+        self.repository = dependencies.resolveRepository()
+    }
 
-    func execute() async throws -> LoginViewData.Content {
-        LoginViewData.Content()
+    func execute(provider: LoginProvider) async throws -> LoginViewData.Session? {
+        do {
+            let response = try await repository.signIn(Request(provider: Self.authProvider(for: provider)))
+            return LoginViewData.Session(
+                userID: response.user.id,
+                name: response.user.name,
+                email: response.user.email
+            )
+        } catch AuthError.canceled {
+            return nil
+        }
+    }
+
+    private static func authProvider(for provider: LoginProvider) -> AuthProvider {
+        switch provider {
+        case .apple: .apple
+        case .google: .google
+        }
     }
 }

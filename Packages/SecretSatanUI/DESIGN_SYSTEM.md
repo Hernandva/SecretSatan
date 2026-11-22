@@ -37,6 +37,7 @@ Custom fonts named in the tokens must be added to the app bundle (`.ttf`/`.otf`)
 | `DSSectionHeader(_:)` | Header above a group of rows. |
 | `DSListRow(_:subtitle:showsChevron:)` | Row in a list. |
 | `DSCard { … }` | Groups content on a surface. |
+| `DSAppleSignInButton(type:action:)` | Apple's own Sign in with Apple button (iOS), pill shaped and as tall as `DSButton`. Apple localises the text; black in light mode, white in dark mode. |
 | `DSAppMark(systemName:)` | App mark: SF Symbol on an 88 pt rounded square of the primary color (login header). |
 
 New components go in `Sources/SecretSatanUI/Components/`, use only tokens, are `public` and include a `#Preview`. A component that shows a single text conforms to `DSLocalizableText`; components with several texts take them already localised.
