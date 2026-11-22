@@ -25,8 +25,10 @@ struct JSONFileStore: LocalStore {
         guard FileManager.default.fileExists(atPath: url.path(percentEncoded: false)) else { return }
         try FileManager.default.removeItem(at: url)
     }
+}
 
-    private func fileURL(for key: String) throws -> URL {
+private extension JSONFileStore {
+    func fileURL(for key: String) throws -> URL {
         let base = try FileManager.default.url(
             for: .applicationSupportDirectory,
             in: .userDomainMask,

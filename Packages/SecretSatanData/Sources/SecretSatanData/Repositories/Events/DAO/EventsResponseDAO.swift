@@ -29,7 +29,9 @@ struct EventsResponseDAO: Decodable, Equatable, Sendable, EventsResponseProtocol
         participantCount = try container.decode(Int.self, forKey: .participantCount)
         date = try Self.decodeDate(from: container, forKey: .date)
     }
+}
 
+private extension EventsResponseDAO {
     /// Reads an ISO 8601 date, with or without fractional seconds, or `nil` when it is missing or `null`.
     private static func decodeDate(
         from container: KeyedDecodingContainer<CodingKeys>,

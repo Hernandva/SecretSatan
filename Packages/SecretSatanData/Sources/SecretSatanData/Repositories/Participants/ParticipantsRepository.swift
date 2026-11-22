@@ -152,9 +152,11 @@ public final class ParticipantsRepository: ParticipantsRepositoryProtocol {
         )
         return link
     }
+}
 
+private extension ParticipantsRepository {
     /// `GET events/:id/participants/:pid/<path>`, which answers with a list of participants.
-    private func fetchParticipants(
+    func fetchParticipants(
         eventId: String,
         participantId: String,
         path: String
@@ -171,14 +173,14 @@ public final class ParticipantsRepository: ParticipantsRepositoryProtocol {
     }
 
     /// `events/:id/participants`.
-    private func participantsURL(eventId: String) throws -> URL {
+    func participantsURL(eventId: String) throws -> URL {
         try configuration.url(for: Self.serviceName)
             .appendingPathComponent(eventId)
             .appendingPathComponent(Self.participantsPath)
     }
 
     /// `Authorization: Bearer <token>` with the saved session, which must not have expired.
-    private func authorizationHeaders() async throws -> [String: String] {
+    func authorizationHeaders() async throws -> [String: String] {
         guard let session = try await sessionStorage.load(), session.expiresAt > Date() else {
             throw ParticipantsError.notSignedIn
         }

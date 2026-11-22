@@ -38,8 +38,10 @@ struct KeychainStore: LocalStore {
             throw LocalStoreError.keychain(status)
         }
     }
+}
 
-    private func baseQuery(for key: String) -> [String: Any] {
+private extension KeychainStore {
+    func baseQuery(for key: String) -> [String: Any] {
         [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,

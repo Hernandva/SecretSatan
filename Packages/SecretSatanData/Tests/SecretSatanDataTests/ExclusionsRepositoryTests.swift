@@ -27,30 +27,6 @@ struct ExclusionsRepositoryTests {
         userDAO: AuthUserDAO(id: "user-1", name: nil, email: nil)
     )
 
-    private static func repository(
-        configuration: RepositoryConfiguration = backend,
-        session: AuthResponseDAO? = validSession
-    ) -> ExclusionsRepository {
-        let sessionConfiguration = URLSessionConfiguration.ephemeral
-        sessionConfiguration.protocolClasses = [ExclusionsStubURLProtocol.self]
-        let client = NetworkClient(session: Session(configuration: sessionConfiguration))
-        return ExclusionsRepository(
-            client: client,
-            configuration: configuration,
-            sessionStorage: ExclusionsSessionStorage(session: session)
-        )
-    }
-
-    private static func stub(status: Int, body: String) {
-        ExclusionsStubURLProtocol.statusCode = status
-        ExclusionsStubURLProtocol.responseBody = Data(body.utf8)
-    }
-
-    /// JSON object sent in the body of the last request.
-    private static func sentBody() throws -> [String: Any]? {
-        try JSONSerialization.jsonObject(with: try #require(ExclusionsStubURLProtocol.lastBody)) as? [String: Any]
-    }
-
     @Test func declaresTheEventsService() {
         #expect(ExclusionsRepository.configuration.serviceNames == ["events"])
     }
@@ -149,6 +125,32 @@ struct ExclusionsRepositoryTests {
     }
 }
 
+private extension ExclusionsRepositoryTests {
+    static func repository(
+        configuration: RepositoryConfiguration = backend,
+        session: AuthResponseDAO? = validSession
+    ) -> ExclusionsRepository {
+        let sessionConfiguration = URLSessionConfiguration.ephemeral
+        sessionConfiguration.protocolClasses = [ExclusionsStubURLProtocol.self]
+        let client = NetworkClient(session: Session(configuration: sessionConfiguration))
+        return ExclusionsRepository(
+            client: client,
+            configuration: configuration,
+            sessionStorage: ExclusionsSessionStorage(session: session)
+        )
+    }
+
+    static func stub(status: Int, body: String) {
+        ExclusionsStubURLProtocol.statusCode = status
+        ExclusionsStubURLProtocol.responseBody = Data(body.utf8)
+    }
+
+    /// JSON object sent in the body of the last request.
+    static func sentBody() throws -> [String: Any]? {
+        try JSONSerialization.jsonObject(with: try #require(ExclusionsStubURLProtocol.lastBody)) as? [String: Any]
+    }
+}
+
 /// Answers every request with `responseBody` and records the last request.
 /// Separate from the other suites' stubs, so they never share its state.
 private final class ExclusionsStubURLProtocol: URLProtocol, @unchecked Sendable {
@@ -177,8 +179,10 @@ private final class ExclusionsStubURLProtocol: URLProtocol, @unchecked Sendable 
     }
 
     override func stopLoading() {}
+}
 
-    private static func read(_ stream: InputStream) -> Data {
+private extension ExclusionsStubURLProtocol {
+    static func read(_ stream: InputStream) -> Data {
         stream.open()
         defer { stream.close() }
         var data = Data()

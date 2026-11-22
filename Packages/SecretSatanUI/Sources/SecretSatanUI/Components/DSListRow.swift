@@ -76,8 +76,10 @@ public struct DSListRow: View, DSLocalizableText {
         if icon != nil { return DSSpacing.space3 }
         return initials == nil ? 0 : DSSpacing.small
     }
+}
 
-    private func avatar(initials: String) -> some View {
+private extension DSListRow {
+    func avatar(initials: String) -> some View {
         Text(initials)
             .font(DSTypeScale.subheadline.weight(.semibold))
             .foregroundStyle(DSColor.textPrimary)
@@ -86,7 +88,7 @@ public struct DSListRow: View, DSLocalizableText {
             .accessibilityHidden(true)
     }
 
-    private func iconTile(systemName: String) -> some View {
+    func iconTile(systemName: String) -> some View {
         Image(systemName: systemName)
             .font(.system(size: Self.iconSymbolSize))
             .foregroundStyle(DSColor.onAccent)

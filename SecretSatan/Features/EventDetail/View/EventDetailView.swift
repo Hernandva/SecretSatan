@@ -103,30 +103,6 @@ struct EventDetailView: View {
         }
     }
 
-    /// Name of the event and, below it, its date ("24 de diciembre de 2026"), each with its edit button.
-    private func header(for event: EventDetailViewData.Event) -> some View {
-        VStack(alignment: .leading, spacing: DSSpacing.small) {
-            HStack(spacing: DSSpacing.space3) {
-                DSText(event.name, style: .largeTitle)
-                Spacer(minLength: 0)
-                DSButton(style: .secondary, size: .compact) { viewModel.startEditingName() }
-                    .localized("eventDetail.edit")
-                    .accessibilityLabel(Text(forKey: "eventDetail.editName", value: "Edit name"))
-            }
-            HStack(spacing: DSSpacing.space3) {
-                if let date = event.date {
-                    DSText(date.formatted(date: .long, time: .omitted), style: .body, color: DSColor.textSecondary)
-                } else {
-                    DSText(style: .body, color: DSColor.textSecondary).localized("eventDetail.noDate")
-                }
-                Spacer(minLength: 0)
-                DSButton(style: .secondary, size: .compact) { viewModel.startEditingDate() }
-                    .localized("eventDetail.edit")
-                    .accessibilityLabel(Text(forKey: "eventDetail.editDate", value: "Edit date"))
-            }
-        }
-    }
-
     /// "Participantes" header with its "Añadir" button and the rows of the participants, or a line saying the list
     /// is empty.
     private var participants: some View {
@@ -159,15 +135,6 @@ struct EventDetailView: View {
                 }
             }
         }
-    }
-
-    /// Row that opens the participant's detail.
-    private func participantRow(_ participant: EventDetailViewData.Participant) -> some View {
-        let route = EventDetailCoordinator.Route.participantDetail(participant, isDrawn: viewModel.isDrawn)
-        return NavigationLink(value: route) {
-            DSListRow(participant.name, initials: participant.initials, showsChevron: true)
-        }
-        .buttonStyle(.plain)
     }
 
     /// Sheet with the current name. "Guardar" turns active once the name changes.
@@ -251,6 +218,41 @@ struct EventDetailView: View {
         if case .failed = viewModel.editState {
             DSText(style: .footnote, color: DSColor.destructive).localized("eventDetail.editError")
         }
+    }
+}
+
+private extension EventDetailView {
+    /// Name of the event and, below it, its date ("24 de diciembre de 2026"), each with its edit button.
+    func header(for event: EventDetailViewData.Event) -> some View {
+        VStack(alignment: .leading, spacing: DSSpacing.small) {
+            HStack(spacing: DSSpacing.space3) {
+                DSText(event.name, style: .largeTitle)
+                Spacer(minLength: 0)
+                DSButton(style: .secondary, size: .compact) { viewModel.startEditingName() }
+                    .localized("eventDetail.edit")
+                    .accessibilityLabel(Text(forKey: "eventDetail.editName", value: "Edit name"))
+            }
+            HStack(spacing: DSSpacing.space3) {
+                if let date = event.date {
+                    DSText(date.formatted(date: .long, time: .omitted), style: .body, color: DSColor.textSecondary)
+                } else {
+                    DSText(style: .body, color: DSColor.textSecondary).localized("eventDetail.noDate")
+                }
+                Spacer(minLength: 0)
+                DSButton(style: .secondary, size: .compact) { viewModel.startEditingDate() }
+                    .localized("eventDetail.edit")
+                    .accessibilityLabel(Text(forKey: "eventDetail.editDate", value: "Edit date"))
+            }
+        }
+    }
+
+    /// Row that opens the participant's detail.
+    func participantRow(_ participant: EventDetailViewData.Participant) -> some View {
+        let route = EventDetailCoordinator.Route.participantDetail(participant, isDrawn: viewModel.isDrawn)
+        return NavigationLink(value: route) {
+            DSListRow(participant.name, initials: participant.initials, showsChevron: true)
+        }
+        .buttonStyle(.plain)
     }
 }
 

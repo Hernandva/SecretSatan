@@ -22,21 +22,6 @@ struct AuthRepositoryTests {
         serviceNames: AuthRepository.configuration.serviceNames
     )
 
-    private static func repository(
-        configuration: RepositoryConfiguration = backend,
-        services: [any AuthProviderService],
-        storage: any AuthSessionStorageProtocol = InMemorySessionStorage()
-    ) -> AuthRepository {
-        let sessionConfiguration = URLSessionConfiguration.ephemeral
-        sessionConfiguration.protocolClasses = [StubURLProtocol.self]
-        let client = NetworkClient(session: Session(configuration: sessionConfiguration))
-        return AuthRepository(client: client, configuration: configuration, services: services, storage: storage)
-    }
-
-    private static func session(expiresAt: Date) -> AuthResponseDAO {
-        AuthResponseDAO(token: "saved", expiresAt: expiresAt, userDAO: AuthUserDAO(id: "u", name: nil, email: nil))
-    }
-
     @Test func declaresOneServicePerProvider() {
         #expect(AuthRepository.configuration.serviceNames == ["auth/apple", "auth/google"])
     }
@@ -151,6 +136,23 @@ struct AuthRepositoryTests {
     }
 }
 
+private extension AuthRepositoryTests {
+    static func repository(
+        configuration: RepositoryConfiguration = backend,
+        services: [any AuthProviderService],
+        storage: any AuthSessionStorageProtocol = InMemorySessionStorage()
+    ) -> AuthRepository {
+        let sessionConfiguration = URLSessionConfiguration.ephemeral
+        sessionConfiguration.protocolClasses = [StubURLProtocol.self]
+        let client = NetworkClient(session: Session(configuration: sessionConfiguration))
+        return AuthRepository(client: client, configuration: configuration, services: services, storage: storage)
+    }
+
+    static func session(expiresAt: Date) -> AuthResponseDAO {
+        AuthResponseDAO(token: "saved", expiresAt: expiresAt, userDAO: AuthUserDAO(id: "u", name: nil, email: nil))
+    }
+}
+
 /// Answers every request with `responseBody` and records the last request.
 private final class StubURLProtocol: URLProtocol, @unchecked Sendable {
     nonisolated(unsafe) static var statusCode = 200
@@ -178,8 +180,10 @@ private final class StubURLProtocol: URLProtocol, @unchecked Sendable {
     }
 
     override func stopLoading() {}
+}
 
-    private static func read(_ stream: InputStream) -> Data {
+private extension StubURLProtocol {
+    static func read(_ stream: InputStream) -> Data {
         stream.open()
         defer { stream.close() }
         var data = Data()

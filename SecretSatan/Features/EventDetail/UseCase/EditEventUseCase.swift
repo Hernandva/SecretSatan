@@ -43,7 +43,7 @@ struct EditEventUseCase: EditEventUseCaseProtocol {
     }
 }
 
-extension EditEventUseCase {
+private extension EditEventUseCase {
     /// Sends only the field that changes.
     private static func request(for change: EditEventChange) -> Request {
         switch change {

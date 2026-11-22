@@ -35,13 +35,15 @@ private final class AppleSignInFlow: NSObject {
             controller.performRequests()
         }
     }
+}
 
-    private func finish(with result: Result<AuthCredentialDAO, any Error>) {
+private extension AppleSignInFlow {
+    func finish(with result: Result<AuthCredentialDAO, any Error>) {
         continuation?.resume(with: result)
         continuation = nil
     }
 
-    private func credentialDAO(from authorization: ASAuthorization) throws -> AuthCredentialDAO {
+    func credentialDAO(from authorization: ASAuthorization) throws -> AuthCredentialDAO {
         guard
             let credential = authorization.credential as? ASAuthorizationAppleIDCredential,
             let tokenData = credential.identityToken,
@@ -59,13 +61,13 @@ private final class AppleSignInFlow: NSObject {
     }
 
     /// 32 random bytes as hex.
-    private static func randomNonce() -> String {
+    static func randomNonce() -> String {
         var generator = SystemRandomNumberGenerator()
         return (0..<32).map { _ in String(format: "%02x", UInt8.random(in: .min ... .max, using: &generator)) }
             .joined()
     }
 
-    private static func sha256(_ text: String) -> String {
+    static func sha256(_ text: String) -> String {
         SHA256.hash(data: Data(text.utf8)).map { String(format: "%02x", $0) }.joined()
     }
 }

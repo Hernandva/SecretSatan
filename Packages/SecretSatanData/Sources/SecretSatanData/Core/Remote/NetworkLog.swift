@@ -39,18 +39,20 @@ enum NetworkLog {
             """)
         #endif
     }
+}
 
-    #if DEBUG
-    private static func status(of response: HTTPURLResponse?) -> String {
+#if DEBUG
+private extension NetworkLog {
+    static func status(of response: HTTPURLResponse?) -> String {
         response.map { "HTTP \($0.statusCode)" } ?? "no response"
     }
 
-    private static func elapsed(_ duration: TimeInterval?) -> String {
+    static func elapsed(_ duration: TimeInterval?) -> String {
         duration.map { " in \(Int(($0 * 1_000).rounded())) ms" } ?? ""
     }
 
     /// The most useful description of an Alamofire error: the decoding or transport error it wraps, if any.
-    private static func describe(_ error: AFError) -> String {
+    static func describe(_ error: AFError) -> String {
         switch error {
         case .responseValidationFailed(reason: .unacceptableStatusCode(let code)):
             return "unacceptable status code \(code)"
@@ -63,5 +65,5 @@ enum NetworkLog {
             return error.localizedDescription
         }
     }
-    #endif
 }
+#endif

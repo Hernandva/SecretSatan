@@ -78,9 +78,11 @@ struct HomeView: View {
             }
         }
     }
+}
 
+private extension HomeView {
     /// "12 dic 2026 · 6 participantes", or only the participants when the event has no date.
-    private func subtitle(for event: HomeViewData.Event) -> String {
+    func subtitle(for event: HomeViewData.Event) -> String {
         let participants = String(localized: "home.event.participants \(event.participantCount)")
         guard let date = event.date else { return participants }
         return "\(date.formatted(date: .abbreviated, time: .omitted)) · \(participants)"

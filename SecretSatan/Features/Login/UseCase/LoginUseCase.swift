@@ -44,8 +44,10 @@ struct LoginUseCase: LoginUseCaseProtocol {
     func hasValidSession() async throws -> Bool {
         try await repository.currentSession() != nil
     }
+}
 
-    private static func authProvider(for provider: LoginProvider) -> AuthProvider {
+private extension LoginUseCase {
+    static func authProvider(for provider: LoginProvider) -> AuthProvider {
         switch provider {
         case .apple: .apple
         case .google: .google

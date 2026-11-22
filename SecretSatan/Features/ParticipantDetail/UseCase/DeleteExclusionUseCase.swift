@@ -42,9 +42,11 @@ struct DeleteExclusionUseCase: DeleteExclusionUseCaseProtocol {
             throw DeleteExclusionError.rejected(reason)
         }
     }
+}
 
+private extension DeleteExclusionUseCase {
     /// `true` when `exclusion` joins the selected participant and `receiverId`, in either direction.
-    private func connects(_ exclusion: any EventExclusionResponseProtocol, to receiverId: String) -> Bool {
+    func connects(_ exclusion: any EventExclusionResponseProtocol, to receiverId: String) -> Bool {
         (exclusion.giverId == participantId && exclusion.receiverId == receiverId)
             || (exclusion.giverId == receiverId && exclusion.receiverId == participantId)
     }

@@ -35,7 +35,9 @@ struct AuthResponseDAO: Codable, Equatable, Sendable, AuthResponseProtocol {
         try container.encode(expiresAt.timeIntervalSince1970, forKey: .expiresAt)
         try container.encode(userDAO, forKey: .userDAO)
     }
+}
 
+private extension AuthResponseDAO {
     /// Reads an ISO 8601 date, with or without fractional seconds, or a Unix timestamp in seconds.
     private static func decodeDate(
         from container: KeyedDecodingContainer<CodingKeys>,

@@ -75,16 +75,18 @@ public final class ExclusionsRepository: ExclusionsRepositoryProtocol {
         let url = try exclusionsURL(eventId: eventId).appendingPathComponent(exclusionId)
         try await client.send(url, method: .delete, headers: try await authorizationHeaders())
     }
+}
 
+private extension ExclusionsRepository {
     /// `events/:id/exclusions`.
-    private func exclusionsURL(eventId: String) throws -> URL {
+    func exclusionsURL(eventId: String) throws -> URL {
         try configuration.url(for: Self.serviceName)
             .appendingPathComponent(eventId)
             .appendingPathComponent(Self.exclusionsPath)
     }
 
     /// `Authorization: Bearer <token>` with the saved session, which must not have expired.
-    private func authorizationHeaders() async throws -> [String: String] {
+    func authorizationHeaders() async throws -> [String: String] {
         guard let session = try await sessionStorage.load(), session.expiresAt > Date() else {
             throw ExclusionsError.notSignedIn
         }

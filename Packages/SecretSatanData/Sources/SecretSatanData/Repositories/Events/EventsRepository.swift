@@ -137,14 +137,16 @@ public final class EventsRepository: EventsRepositoryProtocol {
         )
         return draw
     }
+}
 
+private extension EventsRepository {
     /// `events/:id`.
-    private func eventURL(id: String) throws -> URL {
+    func eventURL(id: String) throws -> URL {
         try configuration.url(for: Self.serviceName).appendingPathComponent(id)
     }
 
     /// `Authorization: Bearer <token>` with the saved session, which must not have expired.
-    private func authorizationHeaders() async throws -> [String: String] {
+    func authorizationHeaders() async throws -> [String: String] {
         guard let session = try await sessionStorage.load(), session.expiresAt > Date() else {
             throw EventsError.notSignedIn
         }

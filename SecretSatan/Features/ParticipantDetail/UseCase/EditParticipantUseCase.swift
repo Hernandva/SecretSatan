@@ -51,7 +51,7 @@ struct EditParticipantUseCase: EditParticipantUseCaseProtocol {
     }
 }
 
-extension EditParticipantUseCase {
+private extension EditParticipantUseCase {
     /// Every field of the participant, with the one that changes replaced.
     private static func request(
         for change: EditParticipantChange,

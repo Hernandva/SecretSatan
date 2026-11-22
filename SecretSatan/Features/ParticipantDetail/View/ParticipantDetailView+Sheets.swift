@@ -29,24 +29,6 @@ extension ParticipantDetailView {
         }
     }
 
-    private func shareButtons(for link: ParticipantDetailViewData.Link) -> some View {
-        VStack(spacing: DSSpacing.small) {
-            if DSMessageComposer.canSendText {
-                DSButton(icon: .symbol("message.fill")) { viewModel.share(in: .messages) }
-                    .localized("participantDetail.share.messages")
-            }
-            if let url = link.whatsAppURL {
-                DSButton(style: .secondary, icon: .symbol("phone.bubble.fill")) {
-                    openURL(url)
-                    viewModel.finishSharing()
-                }
-                .localized("participantDetail.share.whatsApp")
-            }
-            DSButton(style: .outline, icon: .symbol("square.and.arrow.up")) { viewModel.share(in: .share) }
-                .localized("participantDetail.share.otherApps")
-        }
-    }
-
     /// Messages composer addressed to the participant, or its guardian, with the message typed in.
     @ViewBuilder
     var messagesSheet: some View {
@@ -140,5 +122,25 @@ extension ParticipantDetailView {
         }
         .dsSheet(isSaving: viewModel.addWardState == .saving)
         .presentationDetents([.medium, .large])
+    }
+}
+
+private extension ParticipantDetailView {
+    func shareButtons(for link: ParticipantDetailViewData.Link) -> some View {
+        VStack(spacing: DSSpacing.small) {
+            if DSMessageComposer.canSendText {
+                DSButton(icon: .symbol("message.fill")) { viewModel.share(in: .messages) }
+                    .localized("participantDetail.share.messages")
+            }
+            if let url = link.whatsAppURL {
+                DSButton(style: .secondary, icon: .symbol("phone.bubble.fill")) {
+                    openURL(url)
+                    viewModel.finishSharing()
+                }
+                .localized("participantDetail.share.whatsApp")
+            }
+            DSButton(style: .outline, icon: .symbol("square.and.arrow.up")) { viewModel.share(in: .share) }
+                .localized("participantDetail.share.otherApps")
+        }
     }
 }

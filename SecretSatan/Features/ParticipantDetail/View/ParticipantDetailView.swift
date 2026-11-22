@@ -128,7 +128,19 @@ struct ParticipantDetailView: View {
         }
     }
 
-    private func content(for participant: ParticipantDetailViewData.Participant) -> some View {
+    /// Alert shown when removing a ward or an exclusion fails, with the backend's reason when it gave one.
+    private var deleteFailureTitle: Text {
+        switch viewModel.deleteFailure {
+        case .exclusion:
+            Text(forKey: "participantDetail.exclusions.deleteError", value: "Couldn't remove the exclusion.")
+        case .ward, nil:
+            Text(forKey: "participantDetail.wards.deleteError", value: "Couldn't remove the dependent.")
+        }
+    }
+}
+
+private extension ParticipantDetailView {
+    func content(for participant: ParticipantDetailViewData.Participant) -> some View {
         VStack(alignment: .leading, spacing: DSSpacing.medium) {
             header(for: participant)
             // A ward has no phone of its own and can't have wards: its guardian receives its link.
@@ -151,7 +163,7 @@ struct ParticipantDetailView: View {
     }
 
     /// Name of the participant with its "Editar" button.
-    private func header(for participant: ParticipantDetailViewData.Participant) -> some View {
+    func header(for participant: ParticipantDetailViewData.Participant) -> some View {
         HStack(spacing: DSSpacing.space3) {
             DSText(participant.name, style: .largeTitle)
             Spacer(minLength: 0)
@@ -162,7 +174,7 @@ struct ParticipantDetailView: View {
     }
 
     /// "Teléfono" and the number, or "Sin teléfono", with its "Editar" button.
-    private func phoneCard(for participant: ParticipantDetailViewData.Participant) -> some View {
+    func phoneCard(for participant: ParticipantDetailViewData.Participant) -> some View {
         DSListGroup {
             HStack(spacing: DSSpacing.space3) {
                 VStack(alignment: .leading, spacing: 0) {
@@ -185,7 +197,7 @@ struct ParticipantDetailView: View {
 
     /// Header with its "Añadir" button and the rows of `members`, or a line saying the list is empty.
     /// Once the event is drawn, without "Añadir" and without swipe to delete.
-    private func section(
+    func section(
         _ texts: ListSection,
         members: [ParticipantDetailViewData.Member],
         addAction: @escaping @MainActor () -> Void,
@@ -217,16 +229,6 @@ struct ParticipantDetailView: View {
                     }
                 }
             }
-        }
-    }
-
-    /// Alert shown when removing a ward or an exclusion fails, with the backend's reason when it gave one.
-    private var deleteFailureTitle: Text {
-        switch viewModel.deleteFailure {
-        case .exclusion:
-            Text(forKey: "participantDetail.exclusions.deleteError", value: "Couldn't remove the exclusion.")
-        case .ward, nil:
-            Text(forKey: "participantDetail.wards.deleteError", value: "Couldn't remove the dependent.")
         }
     }
 }

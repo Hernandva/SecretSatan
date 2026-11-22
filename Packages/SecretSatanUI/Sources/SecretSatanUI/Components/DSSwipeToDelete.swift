@@ -100,30 +100,32 @@ struct DSSwipeToDelete: ViewModifier {
     }
     #endif
 
-    private func swipeChanged(_ translation: CGFloat) {
+    private var restingOffset: CGFloat {
+        isOpen ? -Self.actionWidth : 0
+    }
+}
+
+private extension DSSwipeToDelete {
+    func swipeChanged(_ translation: CGFloat) {
         blocksTap = true
         let proposed = restingOffset + translation
         offset = min(0, max(proposed, -(Self.actionWidth + Self.overscroll)))
     }
 
-    private func swipeEnded(predicted translation: CGFloat) {
+    func swipeEnded(predicted translation: CGFloat) {
         setOpen(restingOffset + translation < -Self.actionWidth / 2)
         releaseTap()
     }
 
     /// Lets the row take taps again a moment after the swipe, once the finger's touch-up has been ignored.
-    private func releaseTap() {
+    func releaseTap() {
         Task { @MainActor in
             try? await Task.sleep(for: Self.tapBlockAfterSwipe)
             blocksTap = false
         }
     }
 
-    private var restingOffset: CGFloat {
-        isOpen ? -Self.actionWidth : 0
-    }
-
-    private func setOpen(_ open: Bool) {
+    func setOpen(_ open: Bool) {
         withAnimation(.snappy) {
             isOpen = open
             offset = open ? -Self.actionWidth : 0

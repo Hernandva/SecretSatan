@@ -255,19 +255,21 @@ final class EventDetailViewModel {
         return NewParticipantInput(name: name, phone: phone)
     }
 
-    /// `text` without surrounding spaces, or `nil` when it is empty.
-    private static func trimmed(_ text: String) -> String? {
-        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        return trimmed.isEmpty ? nil : trimmed
-    }
-
     /// The typed name without surrounding spaces, or `nil` when it is empty.
     private var trimmedDraftName: String? {
         Self.trimmed(draftName)
     }
+}
+
+private extension EventDetailViewModel {
+    /// `text` without surrounding spaces, or `nil` when it is empty.
+    static func trimmed(_ text: String) -> String? {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? nil : trimmed
+    }
 
     /// Saves the change and puts the updated event in `viewData.event`. Returns `false` when it fails.
-    private func save(_ change: EditEventChange) async -> Bool {
+    func save(_ change: EditEventChange) async -> Bool {
         editState = .saving
         do {
             viewData.event = try await editEventUseCase.execute(change)

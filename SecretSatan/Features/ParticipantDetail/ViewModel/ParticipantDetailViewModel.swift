@@ -283,17 +283,17 @@ final class ParticipantDetailViewModel {
             addExclusionState = .failed(reason: nil)
         }
     }
+}
 
-    // MARK: - Private
-
+private extension ParticipantDetailViewModel {
     /// `text` without surrounding spaces, or `nil` when it is empty.
-    private static func trimmed(_ text: String) -> String? {
+    static func trimmed(_ text: String) -> String? {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         return trimmed.isEmpty ? nil : trimmed
     }
 
     /// Saves the change and puts the updated participant in `viewData.participant`. Returns `false` when it fails.
-    private func save(_ change: EditParticipantChange) async -> Bool {
+    func save(_ change: EditParticipantChange) async -> Bool {
         guard let participant = viewData.participant else { return false }
         editState = .saving
         do {
@@ -303,6 +303,21 @@ final class ParticipantDetailViewModel {
         } catch {
             editState = .failed(error.localizedDescription)
             return false
+        }
+    }
+
+    /// Takes `member` out of the list, runs `delete`, and puts it back when `delete` returns a failure.
+    func remove(
+        _ member: ParticipantDetailViewData.Member,
+        from list: WritableKeyPath<ParticipantDetailViewData, [ParticipantDetailViewData.Member]>,
+        delete: () async -> DeleteFailure?
+    ) async {
+        guard canChangeLists, let index = viewData[keyPath: list].firstIndex(of: member) else { return }
+        viewData[keyPath: list].remove(at: index)
+        if let failure = await delete() {
+            viewData[keyPath: list].insert(member, at: min(index, viewData[keyPath: list].count))
+            deleteFailure = failure
+            deleteFailed = true
         }
     }
 }
@@ -337,21 +352,6 @@ extension ParticipantDetailViewModel {
             } catch {
                 return .exclusion(reason: nil)
             }
-        }
-    }
-
-    /// Takes `member` out of the list, runs `delete`, and puts it back when `delete` returns a failure.
-    private func remove(
-        _ member: ParticipantDetailViewData.Member,
-        from list: WritableKeyPath<ParticipantDetailViewData, [ParticipantDetailViewData.Member]>,
-        delete: () async -> DeleteFailure?
-    ) async {
-        guard canChangeLists, let index = viewData[keyPath: list].firstIndex(of: member) else { return }
-        viewData[keyPath: list].remove(at: index)
-        if let failure = await delete() {
-            viewData[keyPath: list].insert(member, at: min(index, viewData[keyPath: list].count))
-            deleteFailure = failure
-            deleteFailed = true
         }
     }
 }

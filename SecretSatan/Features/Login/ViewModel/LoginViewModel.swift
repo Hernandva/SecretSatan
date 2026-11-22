@@ -42,8 +42,10 @@ final class LoginViewModel {
     func continueWithGoogle() async {
         await signIn(with: .google)
     }
+}
 
-    private func signIn(with provider: LoginProvider) async {
+private extension LoginViewModel {
+    func signIn(with provider: LoginProvider) async {
         guard state != .loading, state != .checkingSession else { return }
         state = .loading
         do {

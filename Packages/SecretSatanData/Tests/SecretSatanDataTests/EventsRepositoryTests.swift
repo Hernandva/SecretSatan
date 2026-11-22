@@ -21,11 +21,6 @@ struct EventsRepositoryTests {
      "budget":30,"status":"drawn","participantCount":8}
     """
 
-    /// JSON object sent in the body of the last request.
-    private static func sentBody() throws -> [String: Any]? {
-        try JSONSerialization.jsonObject(with: try #require(EventsStubURLProtocol.lastBody)) as? [String: Any]
-    }
-
     private static let backend = RepositoryConfiguration(
         baseURL: "https://backend.test",
         serviceNames: EventsRepository.configuration.serviceNames
@@ -36,25 +31,6 @@ struct EventsRepositoryTests {
         expiresAt: Date().addingTimeInterval(3_600),
         userDAO: AuthUserDAO(id: "user-1", name: nil, email: nil)
     )
-
-    private static func repository(
-        configuration: RepositoryConfiguration = backend,
-        session: AuthResponseDAO? = validSession
-    ) -> EventsRepository {
-        let sessionConfiguration = URLSessionConfiguration.ephemeral
-        sessionConfiguration.protocolClasses = [EventsStubURLProtocol.self]
-        let client = NetworkClient(session: Session(configuration: sessionConfiguration))
-        return EventsRepository(
-            client: client,
-            configuration: configuration,
-            sessionStorage: EventsSessionStorage(session: session)
-        )
-    }
-
-    private static func stub(status: Int, body: String) {
-        EventsStubURLProtocol.statusCode = status
-        EventsStubURLProtocol.responseBody = Data(body.utf8)
-    }
 
     @Test func declaresTheEventsService() {
         #expect(EventsRepository.configuration.serviceNames == ["events"])
@@ -288,6 +264,32 @@ struct EventsRepositoryTests {
     }
 }
 
+private extension EventsRepositoryTests {
+    /// JSON object sent in the body of the last request.
+    static func sentBody() throws -> [String: Any]? {
+        try JSONSerialization.jsonObject(with: try #require(EventsStubURLProtocol.lastBody)) as? [String: Any]
+    }
+
+    static func repository(
+        configuration: RepositoryConfiguration = backend,
+        session: AuthResponseDAO? = validSession
+    ) -> EventsRepository {
+        let sessionConfiguration = URLSessionConfiguration.ephemeral
+        sessionConfiguration.protocolClasses = [EventsStubURLProtocol.self]
+        let client = NetworkClient(session: Session(configuration: sessionConfiguration))
+        return EventsRepository(
+            client: client,
+            configuration: configuration,
+            sessionStorage: EventsSessionStorage(session: session)
+        )
+    }
+
+    static func stub(status: Int, body: String) {
+        EventsStubURLProtocol.statusCode = status
+        EventsStubURLProtocol.responseBody = Data(body.utf8)
+    }
+}
+
 /// Answers every request with `responseBody` and records the last request.
 /// Separate from the Auth tests' stub, so the two suites never share its state.
 private final class EventsStubURLProtocol: URLProtocol, @unchecked Sendable {
@@ -316,8 +318,10 @@ private final class EventsStubURLProtocol: URLProtocol, @unchecked Sendable {
     }
 
     override func stopLoading() {}
+}
 
-    private static func read(_ stream: InputStream) -> Data {
+private extension EventsStubURLProtocol {
+    static func read(_ stream: InputStream) -> Data {
         stream.open()
         defer { stream.close() }
         var data = Data()

@@ -87,8 +87,10 @@ public final class NetworkClient: @unchecked Sendable {
             throw Self.error(for: error, response: response.response, data: response.data)
         }
     }
+}
 
-    private func decode<Response: Decodable & Sendable>(
+private extension NetworkClient {
+    func decode<Response: Decodable & Sendable>(
         _ dataRequest: DataRequest,
         method: RequestMethod,
         url: URL
@@ -113,7 +115,7 @@ public final class NetworkClient: @unchecked Sendable {
     }
 
     /// `NetworkError.server` when the backend answered with its error body, the Alamofire error otherwise.
-    private static func error(for error: AFError, response: HTTPURLResponse?, data: Data?) -> any Error {
+    static func error(for error: AFError, response: HTTPURLResponse?, data: Data?) -> any Error {
         guard
             let response,
             let data,

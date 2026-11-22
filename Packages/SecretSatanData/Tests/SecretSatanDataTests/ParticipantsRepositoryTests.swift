@@ -26,30 +26,6 @@ struct ParticipantsRepositoryTests {
         userDAO: AuthUserDAO(id: "user-1", name: nil, email: nil)
     )
 
-    private static func repository(
-        configuration: RepositoryConfiguration = backend,
-        session: AuthResponseDAO? = validSession
-    ) -> ParticipantsRepository {
-        let sessionConfiguration = URLSessionConfiguration.ephemeral
-        sessionConfiguration.protocolClasses = [ParticipantsStubURLProtocol.self]
-        let client = NetworkClient(session: Session(configuration: sessionConfiguration))
-        return ParticipantsRepository(
-            client: client,
-            configuration: configuration,
-            sessionStorage: ParticipantsSessionStorage(session: session)
-        )
-    }
-
-    private static func stub(status: Int, body: String) {
-        ParticipantsStubURLProtocol.statusCode = status
-        ParticipantsStubURLProtocol.responseBody = Data(body.utf8)
-    }
-
-    /// JSON object sent in the body of the last request.
-    private static func sentBody() throws -> [String: Any]? {
-        try JSONSerialization.jsonObject(with: try #require(ParticipantsStubURLProtocol.lastBody)) as? [String: Any]
-    }
-
     @Test func declaresTheEventsService() {
         #expect(ParticipantsRepository.configuration.serviceNames == ["events"])
     }
@@ -252,6 +228,32 @@ struct ParticipantsRepositoryTests {
     }
 }
 
+private extension ParticipantsRepositoryTests {
+    static func repository(
+        configuration: RepositoryConfiguration = backend,
+        session: AuthResponseDAO? = validSession
+    ) -> ParticipantsRepository {
+        let sessionConfiguration = URLSessionConfiguration.ephemeral
+        sessionConfiguration.protocolClasses = [ParticipantsStubURLProtocol.self]
+        let client = NetworkClient(session: Session(configuration: sessionConfiguration))
+        return ParticipantsRepository(
+            client: client,
+            configuration: configuration,
+            sessionStorage: ParticipantsSessionStorage(session: session)
+        )
+    }
+
+    static func stub(status: Int, body: String) {
+        ParticipantsStubURLProtocol.statusCode = status
+        ParticipantsStubURLProtocol.responseBody = Data(body.utf8)
+    }
+
+    /// JSON object sent in the body of the last request.
+    static func sentBody() throws -> [String: Any]? {
+        try JSONSerialization.jsonObject(with: try #require(ParticipantsStubURLProtocol.lastBody)) as? [String: Any]
+    }
+}
+
 /// Answers every request with `responseBody` and records the last request.
 /// Separate from the other suites' stubs, so they never share its state.
 private final class ParticipantsStubURLProtocol: URLProtocol, @unchecked Sendable {
@@ -280,8 +282,10 @@ private final class ParticipantsStubURLProtocol: URLProtocol, @unchecked Sendabl
     }
 
     override func stopLoading() {}
+}
 
-    private static func read(_ stream: InputStream) -> Data {
+private extension ParticipantsStubURLProtocol {
+    static func read(_ stream: InputStream) -> Data {
         stream.open()
         defer { stream.close() }
         var data = Data()

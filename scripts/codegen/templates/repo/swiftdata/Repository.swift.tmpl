@@ -35,9 +35,11 @@ public final class {{Repo}}Repository: {{Repo}}RepositoryProtocol {
     public func deleteAll() async throws {
         try await {{Repo}}Store(modelContainer: container).deleteAll()
     }
+}
 
+private extension {{Repo}}Repository {
     /// Each repository has its own store file, named after it.
-    private static func newContainer(inMemory: Bool) -> ModelContainer {
+    static func newContainer(inMemory: Bool) -> ModelContainer {
         let configuration = ModelConfiguration("{{Repo}}", isStoredInMemoryOnly: inMemory)
         do {
             return try ModelContainer(for: {{Repo}}Entity.self, configurations: configuration)
