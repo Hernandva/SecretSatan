@@ -1,0 +1,232 @@
+import Alamofire
+import Foundation
+@testable import SecretSatanData
+import Testing
+
+@Suite(.serialized)
+struct ParticipantsRepositoryTests {
+    private struct Request: ParticipantsRequestProtocol {
+        let name: String
+        var phone: String?
+        var family: String?
+        var guardianId: String?
+    }
+
+    private static let eventId = "E1"
+    private static let guardianId = "11111111-AAAA-4BBB-8CCC-000000000001"
+    private static let childId = "11111111-AAAA-4BBB-8CCC-000000000003"
+
+    private static let backend = RepositoryConfiguration(
+        baseURL: "https://backend.test",
+        serviceNames: ParticipantsRepository.configuration.serviceNames
+    )
+
+    private static let validSession = AuthResponseDAO(
+        token: "session-token",
+        expiresAt: Date().addingTimeInterval(3_600),
+        userDAO: AuthUserDAO(id: "user-1", name: nil, email: nil)
+    )
+
+    private static func repository(
+        configuration: RepositoryConfiguration = backend,
+        session: AuthResponseDAO? = validSession
+    ) -> ParticipantsRepository {
+        let sessionConfiguration = URLSessionConfiguration.ephemeral
+        sessionConfiguration.protocolClasses = [ParticipantsStubURLProtocol.self]
+        let client = NetworkClient(session: Session(configuration: sessionConfiguration))
+        return ParticipantsRepository(
+            client: client,
+            configuration: configuration,
+            sessionStorage: ParticipantsSessionStorage(session: session)
+        )
+    }
+
+    private static func stub(status: Int, body: String) {
+        ParticipantsStubURLProtocol.statusCode = status
+        ParticipantsStubURLProtocol.responseBody = Data(body.utf8)
+    }
+
+    /// JSON object sent in the body of the last request.
+    private static func sentBody() throws -> [String: Any]? {
+        try JSONSerialization.jsonObject(with: try #require(ParticipantsStubURLProtocol.lastBody)) as? [String: Any]
+    }
+
+    @Test func declaresTheEventsService() {
+        #expect(ParticipantsRepository.configuration.serviceNames == ["events"])
+    }
+
+    @Test func addsAnAdultWithOnlyTheFieldsItHas() async throws {
+        Self.stub(status: 200, body: """
+        {"id":"\(Self.guardianId)","name":"Ana","phone":"+34600111222","family":"García","guardianId":null}
+        """)
+
+        let participant = try await Self.repository().addParticipant(
+            eventId: Self.eventId,
+            Request(name: "Ana", phone: "+34600111222", family: "García")
+        )
+
+        let sent = try #require(ParticipantsStubURLProtocol.lastRequest)
+        #expect(sent.httpMethod == "POST")
+        #expect(sent.url?.absoluteString == "https://backend.test/events/E1/participants")
+        #expect(sent.value(forHTTPHeaderField: "Authorization") == "Bearer session-token")
+        let body = try Self.sentBody()
+        #expect(body?.keys.sorted() == ["family", "name", "phone"])
+        #expect(body?["phone"] as? String == "+34600111222")
+        #expect(participant.id == Self.guardianId)
+        #expect(participant.guardianId == nil)
+    }
+
+    @Test func addsAChildWithAGuardian() async throws {
+        Self.stub(status: 200, body: """
+        {"id":"\(Self.childId)","name":"Lucía","phone":null,"family":"García","guardianId":"\(Self.guardianId)"}
+        """)
+
+        let participant = try await Self.repository().addParticipant(
+            eventId: Self.eventId,
+            Request(name: "Lucía", family: "García", guardianId: Self.guardianId)
+        )
+
+        let body = try Self.sentBody()
+        #expect(body?.keys.sorted() == ["family", "guardianId", "name"])
+        #expect(participant.id == Self.childId)
+        #expect(participant.name == "Lucía")
+        #expect(participant.phone == nil)
+        #expect(participant.family == "García")
+        #expect(participant.guardianId == Self.guardianId)
+    }
+
+    @Test func updatesEveryFieldSendingTheEmptyOnesAsNull() async throws {
+        Self.stub(status: 200, body: """
+        {"id":"\(Self.guardianId)","name":"Ana María","phone":"+34600999888","family":"García","guardianId":null}
+        """)
+
+        let participant = try await Self.repository().updateParticipant(
+            eventId: Self.eventId,
+            participantId: Self.guardianId,
+            Request(name: "Ana María", phone: "+34600999888", family: "García")
+        )
+
+        let sent = try #require(ParticipantsStubURLProtocol.lastRequest)
+        #expect(sent.httpMethod == "PUT")
+        #expect(sent.url?.absoluteString == "https://backend.test/events/E1/participants/\(Self.guardianId)")
+        let body = try Self.sentBody()
+        #expect(body?.keys.sorted() == ["family", "guardianId", "name", "phone"])
+        #expect(body?["guardianId"] is NSNull)
+        #expect(participant.name == "Ana María")
+        #expect(participant.phone == "+34600999888")
+    }
+
+    @Test func deletesAParticipantAnsweredWithNoContent() async throws {
+        Self.stub(status: 204, body: "")
+
+        try await Self.repository().deleteParticipant(eventId: Self.eventId, participantId: Self.childId)
+
+        let sent = try #require(ParticipantsStubURLProtocol.lastRequest)
+        #expect(sent.httpMethod == "DELETE")
+        #expect(sent.url?.absoluteString == "https://backend.test/events/E1/participants/\(Self.childId)")
+    }
+
+    @Test func throwsTheReasonOfTheBackendWhenThereIsNoPhoneOrGuardian() async {
+        let reason = "Indica un teléfono o un tutor que reciba el enlace."
+        Self.stub(status: 400, body: #"{"error":true,"reason":"\#(reason)"}"#)
+
+        await #expect(throws: NetworkError.server(statusCode: 400, reason: reason)) {
+            try await Self.repository().addParticipant(eventId: Self.eventId, Request(name: "Lucía"))
+        }
+    }
+
+    @Test func throwsTheReasonOfTheBackendAfterTheDraw() async {
+        let reason = "El sorteo ya se hizo; no se pueden quitar participantes."
+        Self.stub(status: 409, body: #"{"error":true,"reason":"\#(reason)"}"#)
+
+        await #expect(throws: NetworkError.server(statusCode: 409, reason: reason)) {
+            try await Self.repository().deleteParticipant(eventId: Self.eventId, participantId: Self.childId)
+        }
+    }
+
+    @Test func throwsNotFoundForAParticipantOfAnotherEvent() async {
+        Self.stub(status: 404, body: #"{"error":true,"reason":"Not Found"}"#)
+
+        await #expect(throws: NetworkError.server(statusCode: 404, reason: "Not Found")) {
+            try await Self.repository().updateParticipant(
+                eventId: Self.eventId,
+                participantId: "missing",
+                Request(name: "Ana", phone: "+34600111222")
+            )
+        }
+    }
+
+    @Test func requiresASession() async {
+        ParticipantsStubURLProtocol.lastRequest = nil
+        await #expect(throws: ParticipantsError.notSignedIn) {
+            try await Self.repository(session: nil).deleteParticipant(eventId: Self.eventId, participantId: "P1")
+        }
+        #expect(ParticipantsStubURLProtocol.lastRequest == nil)
+    }
+
+    @Test func failsWithoutBaseURL() async {
+        let configuration = RepositoryConfiguration(baseURL: "", serviceNames: ["events"])
+        await #expect(throws: NetworkError.missingBaseURL) {
+            try await Self.repository(configuration: configuration).addParticipant(
+                eventId: Self.eventId,
+                Request(name: "Ana", phone: "+34600111222")
+            )
+        }
+    }
+}
+
+/// Answers every request with `responseBody` and records the last request.
+/// Separate from the other suites' stubs, so they never share its state.
+private final class ParticipantsStubURLProtocol: URLProtocol, @unchecked Sendable {
+    nonisolated(unsafe) static var statusCode = 200
+    nonisolated(unsafe) static var responseBody = Data()
+    nonisolated(unsafe) static var lastRequest: URLRequest?
+    nonisolated(unsafe) static var lastBody: Data?
+
+    override static func canInit(with request: URLRequest) -> Bool { true }
+    override static func canonicalRequest(for request: URLRequest) -> URLRequest { request }
+
+    override func startLoading() {
+        Self.lastRequest = request
+        Self.lastBody = request.httpBody ?? request.httpBodyStream.map(Self.read)
+        let response = HTTPURLResponse(
+            url: request.url ?? URL(fileURLWithPath: "/"),
+            statusCode: Self.statusCode,
+            httpVersion: nil,
+            headerFields: ["Content-Type": "application/json"]
+        )
+        if let response {
+            client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
+        }
+        client?.urlProtocol(self, didLoad: Self.responseBody)
+        client?.urlProtocolDidFinishLoading(self)
+    }
+
+    override func stopLoading() {}
+
+    private static func read(_ stream: InputStream) -> Data {
+        stream.open()
+        defer { stream.close() }
+        var data = Data()
+        var buffer = [UInt8](repeating: 0, count: 1024)
+        while stream.hasBytesAvailable {
+            let count = stream.read(&buffer, maxLength: buffer.count)
+            guard count > 0 else { break }
+            data.append(buffer, count: count)
+        }
+        return data
+    }
+}
+
+/// Session storage kept in memory, so tests do not touch the Keychain.
+private actor ParticipantsSessionStorage: AuthSessionStorageProtocol {
+    private var session: AuthResponseDAO?
+
+    init(session: AuthResponseDAO?) {
+        self.session = session
+    }
+
+    func load() async throws -> AuthResponseDAO? { session }
+    func save(_ session: AuthResponseDAO) async throws { self.session = session }
+    func remove() async throws { session = nil }
+}

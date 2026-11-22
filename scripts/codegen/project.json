@@ -17,6 +17,10 @@
     "Events": {
       "type": "remote",
       "storage": null
+    },
+    "Participants": {
+      "type": "remote",
+      "storage": null
     }
   }
 }

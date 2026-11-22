@@ -155,4 +155,5 @@ python3 scripts/codegen/new_repo.py --name <RepositoryName> --type local --stora
 |---|---|---|---|---|
 | `Auth` | Remote | Keychain (session) | `AuthRepositoryProtocol` | `Sources/SecretSatanData/Repositories/Auth` |
 | `Events` | Remote (Bearer session of `Auth`) | — | `EventsRepositoryProtocol` | `Sources/SecretSatanData/Repositories/Events` |
+| `Participants` | Remote (Bearer session of `Auth`) | — | `ParticipantsRepositoryProtocol` | `Sources/SecretSatanData/Repositories/Participants` |
 <!-- codegen:repository-registry:end -->
