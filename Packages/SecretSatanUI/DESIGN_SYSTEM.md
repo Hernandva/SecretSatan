@@ -32,6 +32,7 @@ Custom fonts named in the tokens must be added to the app bundle (`.ttf`/`.otf`)
 | `DSScreen { … }` | Root container of every screen: scroll view, background and margins. |
 | `DSText(_:style:color:)` | Any text. |
 | `DSButton(_:style:icon:action:)` | Actions: 50 pt pill. Styles: `.primary`, `.secondary`, `.outline`, `.destructive`. Optional leading `icon`: `.symbol("apple.logo")` (SF Symbol) or `.glyph("G")`. |
+| `DSLinkButton(_:value:style:icon:)` | `DSButton` that pushes a screen with `NavigationLink(value:)`. Same pill, styles and icons. Use it for buttons that open a route. |
 | `DSTextField(_:value:)` | Text input. The first parameter is the placeholder. |
 | `DSToggle(_:isOn:)` | Switch with a label. |
 | `DSSectionHeader(_:)` | Header above a group of rows. |

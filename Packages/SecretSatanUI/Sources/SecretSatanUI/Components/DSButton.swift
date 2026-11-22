@@ -37,15 +37,26 @@ public struct DSButton: View, DSLocalizableText {
 
     public var body: some View {
         Button(action: action) {
-            HStack(spacing: DSSpacing.small) {
-                iconView
-                Text(text)
-            }
-            .font(DSFont.bodyStrong)
-            .frame(maxWidth: .infinity, minHeight: Self.height)
-            .padding(.horizontal, DSSpacing.medium)
+            DSButtonLabel(text: text, icon: icon)
         }
         .buttonStyle(DSButtonStyle(style: style))
+    }
+}
+
+/// Content of every design-system button: optional icon and text on a full-width, 50 pt row.
+/// Shared by `DSButton` and `DSLinkButton`.
+struct DSButtonLabel: View {
+    let text: String
+    let icon: DSButton.Icon?
+
+    var body: some View {
+        HStack(spacing: DSSpacing.small) {
+            iconView
+            Text(text)
+        }
+        .font(DSFont.bodyStrong)
+        .frame(maxWidth: .infinity, minHeight: DSButton.height)
+        .padding(.horizontal, DSSpacing.medium)
     }
 
     @ViewBuilder private var iconView: some View {
@@ -63,7 +74,8 @@ public struct DSButton: View, DSLocalizableText {
     }
 }
 
-private struct DSButtonStyle: ButtonStyle {
+/// Pill shape and colors of each `DSButton.Style`. Shared by `DSButton` and `DSLinkButton`.
+struct DSButtonStyle: ButtonStyle {
     let style: DSButton.Style
 
     func makeBody(configuration: Configuration) -> some View {

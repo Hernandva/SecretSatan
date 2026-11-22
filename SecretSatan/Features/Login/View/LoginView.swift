@@ -19,6 +19,26 @@ struct LoginView: View {
                     .multilineTextAlignment(.center)
             }
 
+            actions
+        }
+        .disabled(viewModel.state == .loading)
+        .padding(.horizontal, DSSpacing.medium)
+        .padding(.bottom, DSSpacing.large)
+        .background(DSColor.background.ignoresSafeArea())
+        .toolbar(.hidden, for: .navigationBar)
+        .task { await viewModel.checkSession() }
+    }
+
+    /// "Enter" when there is a valid session, the sign-in buttons otherwise.
+    @ViewBuilder
+    private var actions: some View {
+        if viewModel.state == .checkingSession {
+            ProgressView()
+                .frame(minHeight: DSSpacing.tapMin)
+        } else if viewModel.viewData.hasSession {
+            DSLinkButton(value: LoginCoordinator.Route.home)
+                .localized("login.enter")
+        } else {
             DSAppleSignInButton(type: .continue) {
                 Task { await viewModel.continueWithApple() }
             }
@@ -28,11 +48,6 @@ struct LoginView: View {
             }
             .localized("login.continueWithGoogle")
         }
-        .disabled(viewModel.state == .loading)
-        .padding(.horizontal, DSSpacing.medium)
-        .padding(.bottom, DSSpacing.large)
-        .background(DSColor.background.ignoresSafeArea())
-        .toolbar(.hidden, for: .navigationBar)
     }
 
     private var header: some View {

@@ -86,6 +86,23 @@
         }
       }
     },
+    "login.enter" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entrar"
+          }
+        }
+      }
+    },
     "login.error" : {
       "extractionState" : "manual",
       "localizations" : {
