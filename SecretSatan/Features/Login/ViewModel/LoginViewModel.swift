@@ -31,4 +31,10 @@ final class LoginViewModel {
             state = .failed(error.localizedDescription)
         }
     }
+
+    /// "Continuar con Apple". Sign in with Apple is not connected yet.
+    func continueWithApple() {}
+
+    /// "Continuar con Google". Google sign-in is not connected yet.
+    func continueWithGoogle() {}
 }

@@ -31,12 +31,13 @@ Custom fonts named in the tokens must be added to the app bundle (`.ttf`/`.otf`)
 |---|---|
 | `DSScreen { … }` | Root container of every screen: scroll view, background and margins. |
 | `DSText(_:style:color:)` | Any text. |
-| `DSButton(_:style:action:)` | Actions. Styles: `.primary`, `.secondary`, `.destructive`. |
+| `DSButton(_:style:icon:action:)` | Actions: 50 pt pill. Styles: `.primary`, `.secondary`, `.outline`, `.destructive`. Optional leading `icon`: `.symbol("apple.logo")` (SF Symbol) or `.glyph("G")`. |
 | `DSTextField(_:value:)` | Text input. The first parameter is the placeholder. |
 | `DSToggle(_:isOn:)` | Switch with a label. |
 | `DSSectionHeader(_:)` | Header above a group of rows. |
 | `DSListRow(_:subtitle:showsChevron:)` | Row in a list. |
 | `DSCard { … }` | Groups content on a surface. |
+| `DSAppMark(systemName:)` | App mark: SF Symbol on an 88 pt rounded square of the primary color (login header). |
 
 New components go in `Sources/SecretSatanUI/Components/`, use only tokens, are `public` and include a `#Preview`. A component that shows a single text conforms to `DSLocalizableText`; components with several texts take them already localised.
 

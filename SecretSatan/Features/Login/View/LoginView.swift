@@ -10,20 +10,36 @@ struct LoginView: View {
     }
 
     var body: some View {
-        DSScreen {
-            DSText(style: .largeTitle).localized("login.title")
+        VStack(spacing: DSSpacing.space3) {
+            header
+                .frame(maxHeight: .infinity)
 
-            switch viewModel.state {
-            case .idle, .loading:
-                ProgressView()
-            case .loaded:
-                // Compose the screen with SecretSatanUI components fed by `viewModel.viewData`.
-                EmptyView()
-            case .failed(let message):
-                DSText(message, style: .footnote, color: DSColor.destructive)
+            DSButton(icon: .symbol("apple.logo")) {
+                viewModel.continueWithApple()
             }
+            .localized("login.continueWithApple")
+
+            DSButton(style: .outline, icon: .glyph("G")) {
+                viewModel.continueWithGoogle()
+            }
+            .localized("login.continueWithGoogle")
         }
-        .task { await viewModel.load() }
+        .padding(.horizontal, DSSpacing.medium)
+        .padding(.bottom, DSSpacing.large)
+        .background(DSColor.background.ignoresSafeArea())
+        .toolbar(.hidden, for: .navigationBar)
+    }
+
+    private var header: some View {
+        VStack(spacing: DSSpacing.large) {
+            DSAppMark(systemName: "gift")
+
+            VStack(spacing: DSSpacing.small) {
+                DSText(style: .largeTitle).localized("login.title")
+                DSText(style: .body, color: DSColor.textSecondary).localized("login.subtitle")
+            }
+            .multilineTextAlignment(.center)
+        }
     }
 }
 
