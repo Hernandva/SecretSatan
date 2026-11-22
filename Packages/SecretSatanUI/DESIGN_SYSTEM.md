@@ -36,6 +36,8 @@ Custom fonts named in the tokens must be added to the app bundle (`.ttf`/`.otf`)
 | `DSTextField(_:value:)` | Text input. The first parameter is the placeholder. |
 | `DSDatePicker(_:date:placeholder:)` | Date input with a label. The date is optional: while it is `nil` it shows `placeholder` (already localised) as a button; tapping it picks today and shows the compact picker. |
 | `DSToggle(_:isOn:)` | Switch with a label. |
+| `DSCalendarPicker(date:)` | Month calendar to pick a day, on a rounded surface. For sheets or screens whose only task is picking the day; in a form use `DSDatePicker`. |
+| `DSIconButton(_:systemName:action:)` | Icon-only button (SF Symbol in the primary color) with a 44 pt tap target, e.g. a pencil that edits a field. `.localized(_:)` sets its accessibility label. |
 | `DSSectionHeader(_:)` | Header above a group of rows. |
 | `DSListRow(_:subtitle:icon:initials:showsChevron:)` | Row in a list. With `icon` (SF Symbol) it shows a 40 pt tile of the primary color and the headline / subheadline type. With `initials` it shows them on a 40 pt round avatar (`fillSecondary`), as in the participant list. |
 | `DSListGroup(separatorInset:) { … }` | Rows on a rounded surface (`radiusGroup`) with separators between them. Use `DSListRow.iconSeparatorInset` for rows with an icon. |

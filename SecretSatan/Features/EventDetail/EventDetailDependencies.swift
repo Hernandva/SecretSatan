@@ -33,6 +33,10 @@ final class EventDetailDependencies {
         EventParticipantsUseCase(dependencies: self)
     }
 
+    func resolveEditEventUseCase() -> any EditEventUseCaseProtocol {
+        EditEventUseCase(dependencies: self)
+    }
+
     func resolveViewModel() -> EventDetailViewModel {
         EventDetailViewModel(dependencies: self)
     }

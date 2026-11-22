@@ -16,12 +16,22 @@ public protocol EventsRepositoryProtocol: Sendable {
     /// `GET /events/:id`: the event with its participants and exclusions. Never the draw's assignments.
     func fetchEvent(id: String) async throws -> any EventDetailResponseProtocol
 
+    /// `PATCH /events/:id`: changes the name, the date or both, and returns the updated event.
+    /// Only what `request` changes is sent; the rest of the event stays as it was.
+    /// Throws `EventsError.nothingToUpdate`, before any request, when `request` changes nothing.
+    @discardableResult
+    func updateEvent(
+        id: String,
+        _ request: some EventsUpdateRequestProtocol
+    ) async throws -> any EventsResponseProtocol
+
     /// `DELETE /events/:id`: deletes the event and everything that belongs to it.
     func deleteEvent(id: String) async throws
 }
 
 /// Talks to the Events services of the backend, authenticated with the session token of the Auth repository.
-/// Flow: EventsRequestProtocol -> EventsRequestDAO -> /events -> EventsResponseDAO / EventDetailResponseDAO
+/// Flow: EventsRequestProtocol / EventsUpdateRequestProtocol -> EventsRequestDAO / EventsUpdateRequestDAO
+/// -> /events -> EventsResponseDAO / EventDetailResponseDAO
 /// -> EventsResponseProtocol / EventDetailResponseProtocol.
 public final class EventsRepository: EventsRepositoryProtocol {
     /// `events`, and `events/:id` built from it.
@@ -86,6 +96,23 @@ public final class EventsRepository: EventsRepositoryProtocol {
             headers: try await authorizationHeaders()
         )
         return detail
+    }
+
+    @discardableResult
+    public func updateEvent(
+        id: String,
+        _ request: some EventsUpdateRequestProtocol
+    ) async throws -> any EventsResponseProtocol {
+        let body = EventsUpdateRequestDAO(request)
+        guard !body.isEmpty else { throw EventsError.nothingToUpdate }
+        let url = try eventURL(id: id)
+        let event: EventsResponseDAO = try await client.request(
+            url,
+            method: .patch,
+            body: body,
+            headers: try await authorizationHeaders()
+        )
+        return event
     }
 
     public func deleteEvent(id: String) async throws {

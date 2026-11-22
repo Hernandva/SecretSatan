@@ -1,7 +1,8 @@
 import SecretSatanUI
 import SwiftUI
 
-/// "Evento": the name of the event selected in Home, its participants and the button to add one.
+/// "Evento": the name and date of the event selected in Home, with a button to edit each, its participants and
+/// the button to add one.
 struct EventDetailView: View {
     @State private var viewModel: EventDetailViewModel
 
@@ -13,7 +14,7 @@ struct EventDetailView: View {
     var body: some View {
         DSScreen {
             if let event = viewModel.viewData.event {
-                DSText(event.name, style: .largeTitle)
+                header(for: event)
             }
 
             switch viewModel.state {
@@ -33,7 +34,31 @@ struct EventDetailView: View {
                     .localized("eventDetail.addParticipant")
             }
         }
+        .sheet(isPresented: $viewModel.isEditingName) { nameSheet }
+        .sheet(isPresented: $viewModel.isEditingDate) { dateSheet }
         .task { await viewModel.load() }
+    }
+
+    /// Name of the event and, below it, its date ("24 de diciembre de 2026"), each with its edit button.
+    private func header(for event: EventDetailViewData.Event) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(alignment: .top, spacing: DSSpacing.small) {
+                DSText(event.name, style: .largeTitle)
+                Spacer(minLength: 0)
+                DSIconButton(systemName: "pencil") { viewModel.startEditingName() }
+                    .localized("eventDetail.editName")
+            }
+            HStack(spacing: DSSpacing.small) {
+                if let date = event.date {
+                    DSText(date.formatted(date: .long, time: .omitted), style: .body, color: DSColor.textSecondary)
+                } else {
+                    DSText(style: .body, color: DSColor.textSecondary).localized("eventDetail.noDate")
+                }
+                Spacer(minLength: 0)
+                DSIconButton(systemName: "calendar") { viewModel.startEditingDate() }
+                    .localized("eventDetail.editDate")
+            }
+        }
     }
 
     @ViewBuilder
@@ -50,6 +75,71 @@ struct EventDetailView: View {
                 }
             }
         }
+    }
+
+    /// Sheet with the current name. "Guardar" turns active once the name changes.
+    private var nameSheet: some View {
+        VStack(alignment: .leading, spacing: DSSpacing.medium) {
+            DSText(style: .title).localized("eventDetail.editName.title")
+
+            DSTextField(value: $viewModel.draftName)
+                .localized("eventDetail.editName.placeholder")
+                .submitLabel(.done)
+                .onSubmit { Task { await viewModel.saveName() } }
+
+            editError
+
+            Spacer(minLength: 0)
+
+            DSButton { Task { await viewModel.saveName() } }
+                .localized("eventDetail.save")
+                .disabled(!viewModel.canSaveName)
+        }
+        .sheetLayout(isSaving: viewModel.editState == .saving)
+        .presentationDetents([.medium, .large])
+    }
+
+    /// Sheet with the calendar. Picking another day saves it and closes the sheet.
+    private var dateSheet: some View {
+        VStack(alignment: .leading, spacing: DSSpacing.medium) {
+            DSText(style: .title).localized("eventDetail.editDate.title")
+
+            DSCalendarPicker(date: $viewModel.draftDate)
+                .disabled(viewModel.editState == .saving)
+                .onChange(of: viewModel.draftDate) {
+                    Task { await viewModel.saveDraftDate() }
+                }
+
+            if viewModel.editState == .saving {
+                ProgressView()
+                    .frame(maxWidth: .infinity)
+            }
+            editError
+
+            Spacer(minLength: 0)
+        }
+        .sheetLayout(isSaving: viewModel.editState == .saving)
+        .presentationDetents([.large])
+    }
+
+    @ViewBuilder
+    private var editError: some View {
+        if case .failed = viewModel.editState {
+            DSText(style: .footnote, color: DSColor.destructive).localized("eventDetail.editError")
+        }
+    }
+}
+
+private extension View {
+    /// Margins, background and drag indicator of the edit sheets, as in "Nuevo evento".
+    /// The sheet can't be swiped away while the change is being saved.
+    func sheetLayout(isSaving: Bool) -> some View {
+        padding(.horizontal, DSSpacing.medium)
+            .padding(.top, DSSpacing.large)
+            .padding(.bottom, DSSpacing.small)
+            .background(DSColor.background.ignoresSafeArea())
+            .presentationDragIndicator(.visible)
+            .interactiveDismissDisabled(isSaving)
     }
 }
 

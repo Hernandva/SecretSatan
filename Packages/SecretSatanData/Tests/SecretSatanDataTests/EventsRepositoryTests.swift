@@ -11,6 +11,21 @@ struct EventsRepositoryTests {
         var budget: Decimal?
     }
 
+    private struct UpdateRequest: EventsUpdateRequestProtocol {
+        var name: String?
+        var date: EventDateUpdate = .unchanged
+    }
+
+    private static let updatedEvent = """
+    {"id":"3F2A9C1E-8B4D-4E6A-9F11-2C7D5E8A1B90","name":"Nochebuena","date":"2026-12-24T20:00:00Z",
+     "budget":30,"status":"drawn","participantCount":8}
+    """
+
+    /// JSON object sent in the body of the last request.
+    private static func sentBody() throws -> [String: Any]? {
+        try JSONSerialization.jsonObject(with: try #require(EventsStubURLProtocol.lastBody)) as? [String: Any]
+    }
+
     private static let backend = RepositoryConfiguration(
         baseURL: "https://backend.test",
         serviceNames: EventsRepository.configuration.serviceNames
@@ -120,6 +135,80 @@ struct EventsRepositoryTests {
         #expect(detail.participants[1].guardianId == "P1")
         #expect(detail.exclusions.first?.giverId == "P1")
         #expect(detail.exclusions.first?.receiverId == "P2")
+    }
+
+    @Test func updatesOnlyTheDate() async throws {
+        Self.stub(status: 200, body: Self.updatedEvent)
+        let date = Date(timeIntervalSince1970: 1_798_142_400)
+
+        let event = try await Self.repository().updateEvent(
+            id: "3F2A9C1E-8B4D-4E6A-9F11-2C7D5E8A1B90",
+            UpdateRequest(date: .set(date))
+        )
+
+        let sent = try #require(EventsStubURLProtocol.lastRequest)
+        #expect(sent.httpMethod == "PATCH")
+        #expect(sent.url?.absoluteString == "https://backend.test/events/3F2A9C1E-8B4D-4E6A-9F11-2C7D5E8A1B90")
+        #expect(sent.value(forHTTPHeaderField: "Authorization") == "Bearer session-token")
+        let body = try Self.sentBody()
+        #expect(body?.keys.sorted() == ["date"])
+        #expect(body?["date"] as? String == "2026-12-24T20:00:00Z")
+        #expect(event.name == "Nochebuena")
+        #expect(event.date == date)
+        #expect(event.budget == 30)
+        #expect(event.status == .drawn)
+        #expect(event.participantCount == 8)
+    }
+
+    @Test func updatesOnlyTheName() async throws {
+        Self.stub(status: 200, body: Self.updatedEvent)
+
+        try await Self.repository().updateEvent(id: "E1", UpdateRequest(name: "Nochebuena"))
+
+        let body = try Self.sentBody()
+        #expect(body?.keys.sorted() == ["name"])
+        #expect(body?["name"] as? String == "Nochebuena")
+    }
+
+    @Test func updatesTheNameAndTheDate() async throws {
+        Self.stub(status: 200, body: Self.updatedEvent)
+        let date = Date(timeIntervalSince1970: 1_798_142_400)
+
+        try await Self.repository().updateEvent(id: "E1", UpdateRequest(name: "Nochebuena", date: .set(date)))
+
+        let body = try Self.sentBody()
+        #expect(body?.keys.sorted() == ["date", "name"])
+        #expect(body?["name"] as? String == "Nochebuena")
+        #expect(body?["date"] as? String == "2026-12-24T20:00:00Z")
+    }
+
+    @Test func removesTheDateWithNull() async throws {
+        Self.stub(status: 200, body: """
+        {"id":"E1","name":"Nochebuena","date":null,"budget":30,"status":"drawn","participantCount":8}
+        """)
+
+        let event = try await Self.repository().updateEvent(id: "E1", UpdateRequest(date: .remove))
+
+        let body = try Self.sentBody()
+        #expect(body?.keys.sorted() == ["date"])
+        #expect(body?["date"] is NSNull)
+        #expect(event.date == nil)
+    }
+
+    @Test func sendsNothingWhenTheUpdateChangesNothing() async {
+        EventsStubURLProtocol.lastRequest = nil
+        await #expect(throws: EventsError.nothingToUpdate) {
+            try await Self.repository().updateEvent(id: "E1", UpdateRequest())
+        }
+        #expect(EventsStubURLProtocol.lastRequest == nil)
+    }
+
+    @Test func throwsTheReasonOfTheBackendOnUpdate() async {
+        Self.stub(status: 404, body: #"{"error":true,"reason":"Not Found"}"#)
+
+        await #expect(throws: NetworkError.server(statusCode: 404, reason: "Not Found")) {
+            try await Self.repository().updateEvent(id: "missing", UpdateRequest(name: "Nochebuena"))
+        }
     }
 
     @Test func deletesAnEventAnsweredWithNoContent() async throws {
