@@ -4,9 +4,10 @@ import SwiftUI
 /// "Participante": the name and phone of the participant selected in EventDetail, each with its edit button,
 /// the participants it is the guardian of ("Protegidos") and the ones it must not be assigned ("Exclusiones").
 /// A participant with a guardian shows only its name and "Exclusiones".
-/// Once the event is drawn, "Compartir amigo secreto" sends its link again through the system share sheet.
+/// Once the event is drawn, "Compartir amigo secreto" sends its link again by Messages, WhatsApp or another app.
 struct ParticipantDetailView: View {
-    @State private var viewModel: ParticipantDetailViewModel
+    @State var viewModel: ParticipantDetailViewModel
+    @Environment(\.openURL) var openURL
 
     /// Receives only the container and resolves the view model from it.
     init(dependencies: ParticipantDetailDependencies) {
@@ -40,6 +41,8 @@ struct ParticipantDetailView: View {
             case .editPhone: phoneSheet
             case .newWard: wardSheet
             case .newExclusion: exclusionSheet
+            case .shareOptions: shareOptionsSheet
+            case .messages: messagesSheet
             case .share: shareSheet
             }
         }
@@ -119,7 +122,7 @@ struct ParticipantDetailView: View {
     }
 
     @ViewBuilder
-    private var editError: some View {
+    var editError: some View {
         if case .failed = viewModel.editState {
             DSText(style: .footnote, color: DSColor.destructive).localized("participantDetail.editError")
         }
@@ -225,94 +228,6 @@ struct ParticipantDetailView: View {
         case .ward, nil:
             Text(forKey: "participantDetail.wards.deleteError", value: "Couldn't remove the dependent.")
         }
-    }
-}
-
-// MARK: - Sheets
-
-extension ParticipantDetailView {
-    /// System share sheet with the message of the link, ready to send to the participant or its guardian.
-    @ViewBuilder
-    private var shareSheet: some View {
-        if let link = viewModel.viewData.link {
-            DSShareSheet(text: link.message)
-                .presentationDetents([.medium, .large])
-        }
-    }
-
-    /// Sheet with the current name. "Guardar" turns active once the name changes.
-    private var nameSheet: some View {
-        VStack(alignment: .leading, spacing: DSSpacing.medium) {
-            DSText(style: .title).localized("participantDetail.editName.title")
-
-            DSTextField(value: $viewModel.draftName)
-                .localized("participantDetail.editName.placeholder")
-                .textContentType(.name)
-                .submitLabel(.done)
-                .onSubmit { Task { await viewModel.saveName() } }
-
-            editError
-
-            Spacer(minLength: 0)
-
-            DSButton { Task { await viewModel.saveName() } }
-                .localized("participantDetail.save")
-                .disabled(!viewModel.canSaveName)
-        }
-        .dsSheet(isSaving: viewModel.editState == .saving)
-        .presentationDetents([.medium, .large])
-    }
-
-    /// Sheet with the current phone. "Guardar" turns active once the phone changes.
-    private var phoneSheet: some View {
-        VStack(alignment: .leading, spacing: DSSpacing.medium) {
-            DSText(style: .title).localized("participantDetail.editPhone.title")
-
-            DSTextField(value: $viewModel.draftPhone)
-                .localized("participantDetail.editPhone.placeholder")
-                .textContentType(.telephoneNumber)
-                .keyboardType(.phonePad)
-
-            editError
-
-            Spacer(minLength: 0)
-
-            DSButton { Task { await viewModel.savePhone() } }
-                .localized("participantDetail.save")
-                .disabled(!viewModel.canSavePhone)
-        }
-        .dsSheet(isSaving: viewModel.editState == .saving)
-        .presentationDetents([.medium, .large])
-    }
-
-    /// "Nuevo protegido" sheet: only the name, because a ward has no phone. "Guardar" turns active once the name is
-    /// filled in, adds the participant with this participant as its guardian and closes the sheet.
-    private var wardSheet: some View {
-        VStack(alignment: .leading, spacing: DSSpacing.medium) {
-            DSText(style: .title).localized("participantDetail.newWard.title")
-
-            DSTextField(value: $viewModel.wardName)
-                .localized("participantDetail.newWard.name")
-                .textContentType(.name)
-                .submitLabel(.done)
-                .onSubmit { Task { await viewModel.saveWard() } }
-
-            if case .failed(let reason) = viewModel.addWardState {
-                if let reason {
-                    DSText(reason, style: .footnote, color: DSColor.destructive)
-                } else {
-                    DSText(style: .footnote, color: DSColor.destructive).localized("participantDetail.newWard.error")
-                }
-            }
-
-            Spacer(minLength: 0)
-
-            DSButton { Task { await viewModel.saveWard() } }
-                .localized("participantDetail.save")
-                .disabled(!viewModel.canSaveWard)
-        }
-        .dsSheet(isSaving: viewModel.addWardState == .saving)
-        .presentationDetents([.medium, .large])
     }
 }
 

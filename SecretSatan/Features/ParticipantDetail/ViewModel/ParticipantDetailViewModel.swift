@@ -21,7 +21,11 @@ final class ParticipantDetailViewModel {
         case newWard
         /// "Nueva exclusión": picks a participant this one must not be assigned.
         case newExclusion
-        /// System share sheet with the message of `viewData.link`.
+        /// "Enviar a Bruno": how to send the link of `viewData.link`, by Mensajes, WhatsApp or other apps.
+        case shareOptions
+        /// Messages composer with the recipient and the message of `viewData.link`.
+        case messages
+        /// System share sheet with the message of `viewData.link`: "Otras apps…".
         case share
 
         var id: Self { self }
@@ -360,14 +364,14 @@ extension ParticipantDetailViewModel {
         viewData.isDrawn && sheet == nil && shareState != .loading
     }
 
-    /// "Compartir amigo secreto": asks for a new link, keeps it in `viewData.link` and opens the system share sheet
-    /// with its message. If that fails, `shareFailed` turns on.
+    /// "Compartir amigo secreto": asks for a new link, keeps it in `viewData.link` and opens the sheet that asks how
+    /// to send it. If that fails, `shareFailed` turns on.
     func shareLink() async {
         guard canShareLink else { return }
         shareState = .loading
         do {
             viewData.link = try await shareLinkUseCase.execute()
-            sheet = .share
+            sheet = .shareOptions
         } catch {
             if case ShareLinkError.rejected(let reason) = error {
                 shareFailureReason = reason
@@ -377,5 +381,17 @@ extension ParticipantDetailViewModel {
             shareFailed = true
         }
         shareState = .idle
+    }
+
+    /// "Mensajes" (`.messages`) or "Otras apps…" (`.share`) in the options sheet: replaces it with that sheet.
+    /// Ignores other sheets.
+    func share(in option: Sheet) {
+        guard viewData.link != nil, sheet == .shareOptions, option == .messages || option == .share else { return }
+        sheet = option
+    }
+
+    /// Closes the sheet once the link is sent, e.g. after opening WhatsApp or when the Messages composer ends.
+    func finishSharing() {
+        sheet = nil
     }
 }

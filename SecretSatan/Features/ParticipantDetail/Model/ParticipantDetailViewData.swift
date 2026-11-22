@@ -41,6 +41,12 @@ struct ParticipantDetailViewData: Equatable, Sendable {
     struct Link: Equatable, Sendable {
         /// Text ready to send, with the link at the end. It only opens once.
         let message: String
+        /// Who receives the message: the participant itself or, for a ward, its guardian.
+        let recipientName: String
+        /// Phone the message goes to, e.g. "+34600333444".
+        let recipientPhone: String
+        /// WhatsApp chat with `recipientPhone` and `message` already typed, or `nil` when it can't be built.
+        let whatsAppURL: URL?
     }
 
     /// Result of `ParticipantDetailUseCase`, or `nil` until it loads.

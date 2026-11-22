@@ -31,9 +31,30 @@ struct ShareLinkUseCase: ShareLinkUseCaseProtocol {
     func execute() async throws -> ParticipantDetailViewData.Link {
         do {
             let response = try await repository.fetchLink(eventId: eventId, participantId: participantId)
-            return ParticipantDetailViewData.Link(message: response.message)
+            return ParticipantDetailViewData.Link(
+                message: response.message,
+                recipientName: response.deliverToName,
+                recipientPhone: response.deliverToPhone,
+                whatsAppURL: Self.whatsAppURL(phone: response.deliverToPhone, message: response.message)
+            )
         } catch NetworkError.server(_, let reason) {
             throw ShareLinkError.rejected(reason)
         }
+    }
+}
+
+extension ShareLinkUseCase {
+    /// `https://wa.me/<number>?text=<message>`, with the number in international format and only digits:
+    /// "+34 600 333 444" -> "34600333444". The message is percent-encoded except for unreserved characters, so a
+    /// "+" or "&" in it is sent as it is.
+    static func whatsAppURL(phone: String, message: String) -> URL? {
+        let number = phone.filter(\.isWholeNumber)
+        let unreserved = CharacterSet(
+            charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~"
+        )
+        guard !number.isEmpty, let text = message.addingPercentEncoding(withAllowedCharacters: unreserved) else {
+            return nil
+        }
+        return URL(string: "https://wa.me/\(number)?text=\(text)")
     }
 }
