@@ -9,6 +9,15 @@ struct HomeViewData: Equatable, Sendable {
         let email: String?
     }
 
+    /// One row of the event list.
+    struct Event: Equatable, Sendable, Identifiable {
+        let id: String
+        let name: String
+        let participantCount: Int
+    }
+
     /// User of the saved session, or `nil` until it loads or when there is no valid session.
     var user: User?
+    /// Events of the user. Empty until an events repository feeds it.
+    var events: [Event] = []
 }

@@ -36,7 +36,9 @@ Custom fonts named in the tokens must be added to the app bundle (`.ttf`/`.otf`)
 | `DSTextField(_:value:)` | Text input. The first parameter is the placeholder. |
 | `DSToggle(_:isOn:)` | Switch with a label. |
 | `DSSectionHeader(_:)` | Header above a group of rows. |
-| `DSListRow(_:subtitle:showsChevron:)` | Row in a list. |
+| `DSListRow(_:subtitle:icon:showsChevron:)` | Row in a list. With `icon` (SF Symbol) it shows a 40 pt tile of the primary color and the headline / subheadline type. |
+| `DSListGroup(separatorInset:) { … }` | Rows on a rounded surface (`radiusGroup`) with separators between them. Use `DSListRow.iconSeparatorInset` for rows with an icon. |
+| `.dsBottomBar { … }` | Pins the screen's main button to the bottom, above the safe area, with the screen margins and background. |
 | `DSCard { … }` | Groups content on a surface. |
 | `DSAppleSignInButton(type:action:)` | Apple's own Sign in with Apple button (iOS), pill shaped and as tall as `DSButton`. Apple localises the text; black in light mode, white in dark mode. |
 | `DSAppMark(systemName:)` | App mark: SF Symbol on an 88 pt rounded square of the primary color (login header). |
