@@ -93,6 +93,10 @@ final class ParticipantDetailDependencies {
         AddWardUseCase(dependencies: self)
     }
 
+    func resolveShareLinkUseCase() -> any ShareLinkUseCaseProtocol {
+        ShareLinkUseCase(dependencies: self)
+    }
+
     func resolveViewModel() -> ParticipantDetailViewModel {
         ParticipantDetailViewModel(dependencies: self)
     }

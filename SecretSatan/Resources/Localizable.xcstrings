@@ -1314,6 +1314,40 @@
         }
       }
     },
+    "participantDetail.share" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Share Secret Santa"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compartir amigo secreto"
+          }
+        }
+      }
+    },
+    "participantDetail.share.error" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't get the link."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se ha podido obtener el enlace."
+          }
+        }
+      }
+    },
     "participantDetail.wards" : {
       "extractionState" : "manual",
       "localizations" : {

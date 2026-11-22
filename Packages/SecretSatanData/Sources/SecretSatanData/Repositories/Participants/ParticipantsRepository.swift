@@ -37,11 +37,16 @@ public protocol ParticipantsRepositoryProtocol: Sendable {
     /// `GET /events/:id/participants/:pid/excluded`: the participants `participantId` must not be assigned in the
     /// draw, the `receiverId` of every exclusion whose `giverId` is `participantId`. Empty when it has none.
     func fetchExcluded(eventId: String, participantId: String) async throws -> [any ParticipantsResponseProtocol]
+
+    /// `POST /events/:id/participants/:pid/link`: a new link for the participant, e.g. to send it again to someone
+    /// who lost it, with the message and who to deliver it to.
+    func fetchLink(eventId: String, participantId: String) async throws -> any ParticipantLinkResponseProtocol
 }
 
 /// Talks to the participant services of the backend, authenticated with the session token of the Auth repository.
 /// Flow: ParticipantsRequestProtocol -> ParticipantsRequestDAO -> /events/:id/participants
-/// -> ParticipantsResponseDAO -> ParticipantsResponseProtocol.
+/// -> ParticipantsResponseDAO / ParticipantLinkResponseDAO
+/// -> ParticipantsResponseProtocol / ParticipantLinkResponseProtocol.
 public final class ParticipantsRepository: ParticipantsRepositoryProtocol {
     /// `events`, and `events/:id/participants` and `events/:id/participants/:pid` built from it.
     static let serviceName = "events"
@@ -51,6 +56,8 @@ public final class ParticipantsRepository: ParticipantsRepositoryProtocol {
     static let wardsPath = "wards"
     /// Path segment after the participant id that lists the participants it must not be assigned.
     static let excludedPath = "excluded"
+    /// Path segment after the participant id that creates its link.
+    static let linkPath = "link"
 
     /// Services of the backend, on the base URL of the app's Info.plist (`API_BASE_URL` in Config.xcconfig).
     public static let configuration = RepositoryConfiguration(
@@ -129,6 +136,21 @@ public final class ParticipantsRepository: ParticipantsRepositoryProtocol {
         participantId: String
     ) async throws -> [any ParticipantsResponseProtocol] {
         try await fetchParticipants(eventId: eventId, participantId: participantId, path: Self.excludedPath)
+    }
+
+    public func fetchLink(
+        eventId: String,
+        participantId: String
+    ) async throws -> any ParticipantLinkResponseProtocol {
+        let url = try participantsURL(eventId: eventId)
+            .appendingPathComponent(participantId)
+            .appendingPathComponent(Self.linkPath)
+        let link: ParticipantLinkResponseDAO = try await client.request(
+            url,
+            method: .post,
+            headers: try await authorizationHeaders()
+        )
+        return link
     }
 
     /// `GET events/:id/participants/:pid/<path>`, which answers with a list of participants.

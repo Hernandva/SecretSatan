@@ -185,6 +185,30 @@ struct ParticipantsRepositoryTests {
         }
     }
 
+    @Test func fetchesTheLinkOfAParticipantWithoutABody() async throws {
+        let participantId = "11111111-AAAA-4BBB-8CCC-000000000002"
+        let link = "https://secretsanta.hdvillamil.dev/r/Lm7nB3vC9xZ1aS5dF8gH2jK6lQ0wE4rT-yU_iO7pA3s"
+        let message = "🎁 Amigo secreto de Bruno (Navidad familia 2026). Abre el enlace tú solo: funciona una única vez."
+        Self.stub(status: 200, body: """
+        {"participantId":"\(participantId)","name":"Bruno","url":"\(link)",
+         "message":"\(message)\\n\(link)","deliverToName":"Bruno","deliverToPhone":"+34600333444"}
+        """)
+
+        let response = try await Self.repository().fetchLink(eventId: Self.eventId, participantId: participantId)
+
+        #expect(response.participantId == participantId)
+        #expect(response.name == "Bruno")
+        #expect(response.url == URL(string: link))
+        #expect(response.message == "\(message)\n\(link)")
+        #expect(response.deliverToName == "Bruno")
+        #expect(response.deliverToPhone == "+34600333444")
+        let sent = try #require(ParticipantsStubURLProtocol.lastRequest)
+        #expect(sent.httpMethod == "POST")
+        #expect(sent.url?.absoluteString == "https://backend.test/events/E1/participants/\(participantId)/link")
+        #expect(sent.value(forHTTPHeaderField: "Authorization") == "Bearer session-token")
+        #expect(ParticipantsStubURLProtocol.lastBody?.isEmpty ?? true)
+    }
+
     @Test func throwsTheReasonOfTheBackendAfterTheDraw() async {
         let reason = "El sorteo ya se hizo; no se pueden quitar participantes."
         Self.stub(status: 409, body: #"{"error":true,"reason":"\#(reason)"}"#)

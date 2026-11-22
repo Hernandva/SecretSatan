@@ -21,6 +21,8 @@ final class ParticipantDetailViewModel {
         case newWard
         /// "Nueva exclusión": picks a participant this one must not be assigned.
         case newExclusion
+        /// System share sheet with the message of `viewData.link`.
+        case share
 
         var id: Self { self }
     }
@@ -54,6 +56,12 @@ final class ParticipantDetailViewModel {
         case failed
     }
 
+    /// State of the link asked for with "Compartir amigo secreto".
+    enum ShareState: Equatable {
+        case idle
+        case loading
+    }
+
     /// State of the change being saved from the name or the phone sheet.
     enum EditState: Equatable {
         case idle
@@ -76,6 +84,11 @@ final class ParticipantDetailViewModel {
     private(set) var addExclusionState: AddExclusionState = .idle
     /// `true` after removing a ward or an exclusion fails, so the view shows an alert. The view sets it back.
     var deleteFailed = false
+    /// `true` after asking for the link fails, so the view shows an alert. The view sets it back to `false`.
+    var shareFailed = false
+    /// The backend's message when it refused to create the link, or `nil` for any other failure.
+    private(set) var shareFailureReason: String?
+    private(set) var shareState: ShareState = .idle
     /// What couldn't be removed, and why.
     private(set) var deleteFailure: DeleteFailure?
     /// Data of the screen. Each use case result updates only its own field.
@@ -104,6 +117,7 @@ final class ParticipantDetailViewModel {
     private let addExclusionUseCase: any AddExclusionUseCaseProtocol
     private let deleteWardUseCase: any DeleteWardUseCaseProtocol
     private let deleteExclusionUseCase: any DeleteExclusionUseCaseProtocol
+    private let shareLinkUseCase: any ShareLinkUseCaseProtocol
 
     /// Receives only the container and resolves what it needs from it.
     init(dependencies: ParticipantDetailDependencies) {
@@ -116,6 +130,7 @@ final class ParticipantDetailViewModel {
         self.addExclusionUseCase = dependencies.resolveAddExclusionUseCase()
         self.deleteWardUseCase = dependencies.resolveDeleteWardUseCase()
         self.deleteExclusionUseCase = dependencies.resolveDeleteExclusionUseCase()
+        self.shareLinkUseCase = dependencies.resolveShareLinkUseCase()
     }
 
     /// Shows the participant passed in by EventDetail, then loads its exclusions and, unless it has a guardian,
@@ -334,5 +349,33 @@ extension ParticipantDetailViewModel {
             deleteFailure = failure
             deleteFailed = true
         }
+    }
+}
+
+// MARK: - Share
+
+extension ParticipantDetailViewModel {
+    /// `true` when the event is drawn, no sheet is open and no link is being asked for.
+    var canShareLink: Bool {
+        viewData.isDrawn && sheet == nil && shareState != .loading
+    }
+
+    /// "Compartir amigo secreto": asks for a new link, keeps it in `viewData.link` and opens the system share sheet
+    /// with its message. If that fails, `shareFailed` turns on.
+    func shareLink() async {
+        guard canShareLink else { return }
+        shareState = .loading
+        do {
+            viewData.link = try await shareLinkUseCase.execute()
+            sheet = .share
+        } catch {
+            if case ShareLinkError.rejected(let reason) = error {
+                shareFailureReason = reason
+            } else {
+                shareFailureReason = nil
+            }
+            shareFailed = true
+        }
+        shareState = .idle
     }
 }

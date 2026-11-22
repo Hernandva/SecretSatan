@@ -37,6 +37,12 @@ struct ParticipantDetailViewData: Equatable, Sendable {
         }
     }
 
+    /// Link of the participant to share, returned by `ShareLinkUseCase`.
+    struct Link: Equatable, Sendable {
+        /// Text ready to send, with the link at the end. It only opens once.
+        let message: String
+    }
+
     /// Result of `ParticipantDetailUseCase`, or `nil` until it loads.
     var participant: Participant?
     /// "Protegidos": participants whose link this participant receives, e.g. their children.
@@ -50,4 +56,6 @@ struct ParticipantDetailViewData: Equatable, Sendable {
     /// `true` when the event has been drawn, returned by `ParticipantDetailUseCase`: wards and exclusions can't
     /// be added or removed.
     var isDrawn = false
+    /// Last link asked for with "Compartir amigo secreto", returned by `ShareLinkUseCase`, or `nil`.
+    var link: Link?
 }
