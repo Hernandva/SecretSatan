@@ -3,6 +3,7 @@ import SwiftUI
 
 /// "Participante": the name and phone of the participant selected in EventDetail, each with its edit button,
 /// the participants it is the guardian of ("Protegidos") and the ones it must not be assigned ("Exclusiones").
+/// A participant with a guardian shows only its name and "Exclusiones".
 struct ParticipantDetailView: View {
     @State private var viewModel: ParticipantDetailViewModel
 
@@ -120,14 +121,17 @@ struct ParticipantDetailView: View {
     private func content(for participant: ParticipantDetailViewData.Participant) -> some View {
         VStack(alignment: .leading, spacing: DSSpacing.medium) {
             header(for: participant)
-            phoneCard(for: participant)
-            section(
-                titleKey: "participantDetail.wards",
-                emptyKey: "participantDetail.wards.empty",
-                addLabelKey: "participantDetail.wards.add",
-                members: viewModel.viewData.wards,
-                addAction: viewModel.startAddingWard
-            )
+            // A ward has no phone of its own and can't have wards: its guardian receives its link.
+            if !participant.hasGuardian {
+                phoneCard(for: participant)
+                section(
+                    titleKey: "participantDetail.wards",
+                    emptyKey: "participantDetail.wards.empty",
+                    addLabelKey: "participantDetail.wards.add",
+                    members: viewModel.viewData.wards,
+                    addAction: viewModel.startAddingWard
+                )
+            }
             section(
                 titleKey: "participantDetail.exclusions",
                 emptyKey: "participantDetail.exclusions.empty",

@@ -29,6 +29,12 @@ struct ParticipantDetailViewData: Equatable, Sendable {
         /// Participant who receives this participant's link, e.g. the guardian of a child, or `nil`.
         /// Sent back unchanged when the participant is edited, because the edit replaces every field.
         let guardianId: String?
+
+        /// `true` for a ward, such as a child: its guardian receives its link, so it has no phone of its own
+        /// and can't be anybody's guardian. The screen hides "Teléfono" and "Protegidos" for it.
+        var hasGuardian: Bool {
+            guardianId != nil
+        }
     }
 
     /// Result of `ParticipantDetailUseCase`, or `nil` until it loads.

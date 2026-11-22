@@ -69,14 +69,18 @@ final class ParticipantDetailViewModel {
         self.addWardUseCase = dependencies.resolveAddWardUseCase()
     }
 
-    /// Shows the participant passed in by EventDetail, then loads its wards and exclusions at the same time.
+    /// Shows the participant passed in by EventDetail, then loads its exclusions and, unless it has a guardian,
+    /// its wards at the same time.
     func load() async {
         state = .loading
         do {
-            viewData.participant = try await useCase.execute()
-            async let wards = wardsUseCase.execute()
+            let participant = try await useCase.execute()
+            viewData.participant = participant
             async let exclusions = exclusionsUseCase.execute()
-            viewData.wards = try await wards
+            // A participant with a guardian can't have wards, so their list is not requested.
+            if !participant.hasGuardian {
+                viewData.wards = try await wardsUseCase.execute()
+            }
             viewData.exclusions = try await exclusions
             state = .loaded
         } catch {
