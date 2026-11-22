@@ -33,6 +33,19 @@ final class ParticipantDetailViewModel {
         case failed(reason: String?)
     }
 
+    /// A row of "Protegidos" or "Exclusiones" that couldn't be removed, for the alert.
+    enum DeleteFailure: Equatable {
+        /// `reason` is the backend's message when it refused, or `nil` for any other failure.
+        case ward(reason: String?)
+        case exclusion(reason: String?)
+
+        var reason: String? {
+            switch self {
+            case .ward(let reason), .exclusion(let reason): reason
+            }
+        }
+    }
+
     /// State of the participants offered in the "Nueva exclusión" sheet.
     enum CandidatesState: Equatable {
         case idle
@@ -61,6 +74,10 @@ final class ParticipantDetailViewModel {
     private(set) var addWardState: AddWardState = .idle
     private(set) var candidatesState: CandidatesState = .idle
     private(set) var addExclusionState: AddExclusionState = .idle
+    /// `true` after removing a ward or an exclusion fails, so the view shows an alert. The view sets it back.
+    var deleteFailed = false
+    /// What couldn't be removed, and why.
+    private(set) var deleteFailure: DeleteFailure?
     /// Data of the screen. Each use case result updates only its own field.
     private(set) var viewData = ParticipantDetailViewData()
 
@@ -81,6 +98,8 @@ final class ParticipantDetailViewModel {
     private let addWardUseCase: any AddWardUseCaseProtocol
     private let exclusionCandidatesUseCase: any ExclusionCandidatesUseCaseProtocol
     private let addExclusionUseCase: any AddExclusionUseCaseProtocol
+    private let deleteWardUseCase: any DeleteWardUseCaseProtocol
+    private let deleteExclusionUseCase: any DeleteExclusionUseCaseProtocol
 
     /// Receives only the container and resolves what it needs from it.
     init(dependencies: ParticipantDetailDependencies) {
@@ -91,6 +110,8 @@ final class ParticipantDetailViewModel {
         self.addWardUseCase = dependencies.resolveAddWardUseCase()
         self.exclusionCandidatesUseCase = dependencies.resolveExclusionCandidatesUseCase()
         self.addExclusionUseCase = dependencies.resolveAddExclusionUseCase()
+        self.deleteWardUseCase = dependencies.resolveDeleteWardUseCase()
+        self.deleteExclusionUseCase = dependencies.resolveDeleteExclusionUseCase()
     }
 
     /// Shows the participant passed in by EventDetail, then loads its exclusions and, unless it has a guardian,
@@ -258,6 +279,55 @@ final class ParticipantDetailViewModel {
         } catch {
             editState = .failed(error.localizedDescription)
             return false
+        }
+    }
+}
+
+// MARK: - Delete
+
+extension ParticipantDetailViewModel {
+    /// Removes the ward from "Protegidos" at once and from the event on the backend. If that fails, the ward goes
+    /// back to its place and the alert shows.
+    func deleteWard(_ ward: ParticipantDetailViewData.Member) async {
+        await remove(ward, from: \.wards) {
+            do {
+                try await deleteWardUseCase.execute(id: ward.id)
+                return nil
+            } catch DeleteWardError.rejected(let reason) {
+                return .ward(reason: reason)
+            } catch {
+                return .ward(reason: nil)
+            }
+        }
+    }
+
+    /// Removes the participant from "Exclusiones" at once and the exclusion on the backend. If that fails, the
+    /// participant goes back to its place and the alert shows.
+    func deleteExclusion(_ excluded: ParticipantDetailViewData.Member) async {
+        await remove(excluded, from: \.exclusions) {
+            do {
+                try await deleteExclusionUseCase.execute(receiverId: excluded.id)
+                return nil
+            } catch DeleteExclusionError.rejected(let reason) {
+                return .exclusion(reason: reason)
+            } catch {
+                return .exclusion(reason: nil)
+            }
+        }
+    }
+
+    /// Takes `member` out of the list, runs `delete`, and puts it back when `delete` returns a failure.
+    private func remove(
+        _ member: ParticipantDetailViewData.Member,
+        from list: WritableKeyPath<ParticipantDetailViewData, [ParticipantDetailViewData.Member]>,
+        delete: () async -> DeleteFailure?
+    ) async {
+        guard let index = viewData[keyPath: list].firstIndex(of: member) else { return }
+        viewData[keyPath: list].remove(at: index)
+        if let failure = await delete() {
+            viewData[keyPath: list].insert(member, at: min(index, viewData[keyPath: list].count))
+            deleteFailure = failure
+            deleteFailed = true
         }
     }
 }

@@ -705,6 +705,23 @@
         }
       }
     },
+    "participantDetail.delete" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eliminar"
+          }
+        }
+      }
+    },
     "participantDetail.edit" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -888,6 +905,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Añadir exclusión"
+          }
+        }
+      }
+    },
+    "participantDetail.exclusions.deleteError" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't remove the exclusion."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo quitar la exclusión."
           }
         }
       }
@@ -1109,6 +1143,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Añadir protegido"
+          }
+        }
+      }
+    },
+    "participantDetail.wards.deleteError" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't remove the dependent."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se pudo quitar al protegido."
           }
         }
       }

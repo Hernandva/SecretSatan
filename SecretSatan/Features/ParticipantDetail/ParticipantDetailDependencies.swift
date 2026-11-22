@@ -53,6 +53,14 @@ final class ParticipantDetailDependencies {
         exclusionsRepository
     }
 
+    func resolveDeleteWardUseCase() -> any DeleteWardUseCaseProtocol {
+        DeleteWardUseCase(dependencies: self)
+    }
+
+    func resolveDeleteExclusionUseCase() -> any DeleteExclusionUseCaseProtocol {
+        DeleteExclusionUseCase(dependencies: self)
+    }
+
     func resolveAddExclusionUseCase() -> any AddExclusionUseCaseProtocol {
         AddExclusionUseCase(dependencies: self)
     }

@@ -34,6 +34,12 @@ struct ParticipantDetailView: View {
             case .newExclusion: exclusionSheet
             }
         }
+        .alert(deleteFailureTitle, isPresented: $viewModel.deleteFailed) {
+        } message: {
+            if let reason = viewModel.deleteFailure?.reason {
+                Text(reason)
+            }
+        }
         .task { await viewModel.load() }
     }
 
@@ -183,19 +189,17 @@ struct ParticipantDetailView: View {
             if !participant.hasGuardian {
                 phoneCard(for: participant)
                 section(
-                    titleKey: "participantDetail.wards",
-                    emptyKey: "participantDetail.wards.empty",
-                    addLabelKey: "participantDetail.wards.add",
+                    .wards,
                     members: viewModel.viewData.wards,
-                    addAction: viewModel.startAddingWard
+                    addAction: viewModel.startAddingWard,
+                    deleteAction: { ward in Task { await viewModel.deleteWard(ward) } }
                 )
             }
             section(
-                titleKey: "participantDetail.exclusions",
-                emptyKey: "participantDetail.exclusions.empty",
-                addLabelKey: "participantDetail.exclusions.add",
+                .exclusions,
                 members: viewModel.viewData.exclusions,
-                addAction: viewModel.startAddingExclusion
+                addAction: viewModel.startAddingExclusion,
+                deleteAction: { excluded in Task { await viewModel.deleteExclusion(excluded) } }
             )
         }
     }
@@ -235,33 +239,67 @@ struct ParticipantDetailView: View {
 
     /// Header with its "Añadir" button and the rows of `members`, or a line saying the list is empty.
     private func section(
-        titleKey: String,
-        emptyKey: String,
-        addLabelKey: String,
+        _ texts: ListSection,
         members: [ParticipantDetailViewData.Member],
-        addAction: @escaping @MainActor () -> Void
+        addAction: @escaping @MainActor () -> Void,
+        deleteAction: @escaping @MainActor (ParticipantDetailViewData.Member) -> Void
     ) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: DSSpacing.space3) {
-                DSSectionHeader().localized(titleKey)
+                DSSectionHeader().localized(texts.titleKey)
                 Spacer(minLength: 0)
                 DSTextButton(icon: "plus", action: addAction)
                     .localized("participantDetail.add")
-                    .accessibilityLabel(Text(forKey: addLabelKey, value: "Add"))
+                    .accessibilityLabel(Text(forKey: texts.addLabelKey, value: "Add"))
             }
             if members.isEmpty {
                 DSText(style: .body, color: DSColor.textSecondary)
-                    .localized(emptyKey)
+                    .localized(texts.emptyKey)
                     .padding(.horizontal, DSSpacing.medium)
             } else {
                 DSListGroup(separatorInset: DSListRow.iconSeparatorInset) {
                     ForEach(members) { member in
                         DSListRow(member.name, initials: member.initials)
+                            .dsSwipeToDelete(texts.deleteLabel) { deleteAction(member) }
                     }
                 }
             }
         }
     }
+
+    /// Alert shown when removing a ward or an exclusion fails, with the backend's reason when it gave one.
+    private var deleteFailureTitle: Text {
+        switch viewModel.deleteFailure {
+        case .exclusion:
+            Text(forKey: "participantDetail.exclusions.deleteError", value: "Couldn't remove the exclusion.")
+        case .ward, nil:
+            Text(forKey: "participantDetail.wards.deleteError", value: "Couldn't remove the dependent.")
+        }
+    }
+}
+
+/// Texts of a "Protegidos" or "Exclusiones" section.
+private struct ListSection {
+    let titleKey: String
+    let emptyKey: String
+    /// Accessibility label of its "Añadir" button.
+    let addLabelKey: String
+    /// Title of the button revealed by swiping a row, already localised.
+    let deleteLabel: String
+
+    static let wards = ListSection(
+        titleKey: "participantDetail.wards",
+        emptyKey: "participantDetail.wards.empty",
+        addLabelKey: "participantDetail.wards.add",
+        deleteLabel: String(localized: "participantDetail.delete")
+    )
+
+    static let exclusions = ListSection(
+        titleKey: "participantDetail.exclusions",
+        emptyKey: "participantDetail.exclusions.empty",
+        addLabelKey: "participantDetail.exclusions.add",
+        deleteLabel: String(localized: "participantDetail.delete")
+    )
 }
 
 #Preview {
