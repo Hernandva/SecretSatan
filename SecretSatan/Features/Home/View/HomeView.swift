@@ -43,6 +43,13 @@ struct HomeView: View {
             Text(forKey: "home.deleteError", value: "Couldn't delete the event."),
             isPresented: $viewModel.deleteFailed
         ) {}
+        // The title is only the label of the back button of the screens pushed from Home ("Eventos"):
+        // the empty principal item keeps it out of the bar, where the large DSText already shows it.
+        .navigationTitle(String(localized: "home.title"))
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .principal) { EmptyView() }
+        }
         .task { await viewModel.load() }
     }
 

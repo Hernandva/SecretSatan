@@ -1,36 +1,36 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
-    "eventDetail.date" : {
+    "eventDetail.addParticipant" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Date"
+            "value" : "Add participant"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Fecha"
+            "value" : "Añadir participante"
           }
         }
       }
     },
-    "eventDetail.details" : {
+    "eventDetail.empty" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Details"
+            "value" : "This event doesn't have any participants yet."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Detalles"
+            "value" : "Este evento todavía no tiene participantes."
           }
         }
       }
@@ -52,65 +52,7 @@
         }
       }
     },
-    "eventDetail.noDate" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No date"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sin fecha"
-          }
-        }
-      }
-    },
-    "eventDetail.participants %lld" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld participant"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld participants"
-                }
-              }
-            }
-          }
-        },
-        "es" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld participante"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld participantes"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "eventDetail.participantsLabel" : {
+    "eventDetail.participants" : {
       "extractionState" : "manual",
       "localizations" : {
         "en" : {

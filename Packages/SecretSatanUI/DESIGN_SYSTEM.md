@@ -37,7 +37,7 @@ Custom fonts named in the tokens must be added to the app bundle (`.ttf`/`.otf`)
 | `DSDatePicker(_:date:placeholder:)` | Date input with a label. The date is optional: while it is `nil` it shows `placeholder` (already localised) as a button; tapping it picks today and shows the compact picker. |
 | `DSToggle(_:isOn:)` | Switch with a label. |
 | `DSSectionHeader(_:)` | Header above a group of rows. |
-| `DSListRow(_:subtitle:icon:showsChevron:)` | Row in a list. With `icon` (SF Symbol) it shows a 40 pt tile of the primary color and the headline / subheadline type. |
+| `DSListRow(_:subtitle:icon:initials:showsChevron:)` | Row in a list. With `icon` (SF Symbol) it shows a 40 pt tile of the primary color and the headline / subheadline type. With `initials` it shows them on a 40 pt round avatar (`fillSecondary`), as in the participant list. |
 | `DSListGroup(separatorInset:) { … }` | Rows on a rounded surface (`radiusGroup`) with separators between them. Use `DSListRow.iconSeparatorInset` for rows with an icon. |
 | `.dsBottomBar { … }` | Pins the screen's main button to the bottom, above the safe area, with the screen margins and background. |
 | `.dsSwipeToDelete(_:action:)` | On a row of a `DSListGroup`: dragging it left reveals a destructive button that runs `action`; also a VoiceOver action. |

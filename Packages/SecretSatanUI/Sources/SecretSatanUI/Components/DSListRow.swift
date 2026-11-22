@@ -5,6 +5,8 @@ import SwiftUI
 ///
 /// With `icon`, the row shows the SF Symbol on a rounded tile of the primary color and uses the larger
 /// headline / subheadline type, as in the event list.
+/// With `initials` (and no `icon`), it shows them on a round avatar, as in the participant list.
+/// Both leading views are 40 pt, so rows with either line up with `iconSeparatorInset`.
 public struct DSListRow: View, DSLocalizableText {
     /// Side of the icon tile.
     static let iconSide: CGFloat = 40
@@ -16,19 +18,34 @@ public struct DSListRow: View, DSLocalizableText {
     public var text: String
     private let subtitle: String?
     private let icon: String?
+    private let initials: String?
     private let showsChevron: Bool
 
-    public init(_ text: String = "", subtitle: String? = nil, icon: String? = nil, showsChevron: Bool = false) {
+    public init(
+        _ text: String = "",
+        subtitle: String? = nil,
+        icon: String? = nil,
+        initials: String? = nil,
+        showsChevron: Bool = false
+    ) {
         self.text = text
         self.subtitle = subtitle
         self.icon = icon
+        self.initials = initials
         self.showsChevron = showsChevron
     }
 
+    /// `true` when the row has a leading icon tile or avatar.
+    private var hasLeadingView: Bool {
+        icon != nil || initials != nil
+    }
+
     public var body: some View {
-        HStack(spacing: icon == nil ? DSSpacing.small : DSSpacing.space3) {
+        HStack(spacing: hasLeadingView ? DSSpacing.space3 : DSSpacing.small) {
             if let icon {
                 iconTile(systemName: icon)
+            } else if let initials {
+                avatar(initials: initials)
             }
             VStack(alignment: .leading, spacing: icon == nil ? DSSpacing.xSmall : 0) {
                 Text(text)
@@ -48,10 +65,25 @@ public struct DSListRow: View, DSLocalizableText {
             }
         }
         .padding(.horizontal, DSSpacing.medium)
-        .padding(.vertical, icon == nil ? 0 : DSSpacing.space3)
+        .padding(.vertical, verticalPadding)
         .frame(minHeight: DSSpacing.tapMin)
         .background(DSColor.surface)
         .contentShape(Rectangle())
+    }
+
+    /// Icon rows are taller (68 pt), as in the event list; avatar rows are 56 pt, as in the participant list.
+    private var verticalPadding: CGFloat {
+        if icon != nil { return DSSpacing.space3 }
+        return initials == nil ? 0 : DSSpacing.small
+    }
+
+    private func avatar(initials: String) -> some View {
+        Text(initials)
+            .font(DSTypeScale.subheadline.weight(.semibold))
+            .foregroundStyle(DSColor.textPrimary)
+            .frame(width: Self.iconSide, height: Self.iconSide)
+            .background(DSColor.fillSecondary, in: Circle())
+            .accessibilityHidden(true)
     }
 
     private func iconTile(systemName: String) -> some View {
@@ -72,5 +104,6 @@ public struct DSListRow: View, DSLocalizableText {
         DSListRow("Account", subtitle: "Signed in", showsChevron: true)
         DSListRow("Privacy", showsChevron: true)
         DSListRow("Family 2026", subtitle: "6 participants", icon: "gift", showsChevron: true)
+        DSListRow("Lucía Martín", initials: "LM")
     }
 }
