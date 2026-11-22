@@ -124,6 +124,44 @@ func load() async {
 - Never push with `navigationDestination(item:)` or `isPresented:`: value links pushed on top of those screens are
   lost. Push every screen with `NavigationLink(value:)` and a route.
 
+### Bottom sheets
+
+A screen shows at most one bottom sheet at a time. Its view model keeps them in a single optional value, so two
+can never be set at once, and the view presents it with one `.sheet(item:)`:
+
+```swift
+// ViewModel
+enum Sheet: Identifiable {
+    case editName
+    case editDate
+
+    var id: Self { self }
+}
+
+/// Sheet shown on top of the screen, or `nil`.
+var sheet: Sheet?
+
+func startEditingName() {
+    guard sheet == nil else { return }   // another sheet is already open
+    draftName = viewData.event?.name ?? ""
+    sheet = .editName
+}
+
+// After saving: sheet = nil
+
+// View
+.sheet(item: $viewModel.sheet) { sheet in
+    switch sheet {
+    case .editName: nameSheet
+    case .editDate: dateSheet
+    }
+}
+```
+
+- Never add several `.sheet(isPresented:)` modifiers to one screen: each `Bool` can turn on while another sheet is
+  shown. A screen with a single sheet may keep one `.sheet(isPresented:)`.
+- Lay out every sheet with `.dsSheet(isSaving:)` from SecretSatanUI.
+
 ### Localisation
 
 - Strings live in `Resources/Localizable.xcstrings`. Keys follow `<featureName>.<element>`, e.g. `profile.title`.

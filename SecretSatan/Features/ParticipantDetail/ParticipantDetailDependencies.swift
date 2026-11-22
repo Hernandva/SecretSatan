@@ -49,6 +49,10 @@ final class ParticipantDetailDependencies {
         EditParticipantUseCase(dependencies: self)
     }
 
+    func resolveAddWardUseCase() -> any AddWardUseCaseProtocol {
+        AddWardUseCase(dependencies: self)
+    }
+
     func resolveViewModel() -> ParticipantDetailViewModel {
         ParticipantDetailViewModel(dependencies: self)
     }

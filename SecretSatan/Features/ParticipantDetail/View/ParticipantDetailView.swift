@@ -25,8 +25,13 @@ struct ParticipantDetailView: View {
                 DSText(style: .footnote, color: DSColor.destructive).localized("participantDetail.error")
             }
         }
-        .sheet(isPresented: $viewModel.isEditingName) { nameSheet }
-        .sheet(isPresented: $viewModel.isEditingPhone) { phoneSheet }
+        .sheet(item: $viewModel.sheet) { sheet in
+            switch sheet {
+            case .editName: nameSheet
+            case .editPhone: phoneSheet
+            case .newWard: wardSheet
+            }
+        }
         .task { await viewModel.load() }
     }
 
@@ -72,6 +77,36 @@ struct ParticipantDetailView: View {
                 .disabled(!viewModel.canSavePhone)
         }
         .dsSheet(isSaving: viewModel.editState == .saving)
+        .presentationDetents([.medium, .large])
+    }
+
+    /// "Nuevo protegido" sheet: only the name, because a ward has no phone. "Guardar" turns active once the name is
+    /// filled in, adds the participant with this participant as its guardian and closes the sheet.
+    private var wardSheet: some View {
+        VStack(alignment: .leading, spacing: DSSpacing.medium) {
+            DSText(style: .title).localized("participantDetail.newWard.title")
+
+            DSTextField(value: $viewModel.wardName)
+                .localized("participantDetail.newWard.name")
+                .textContentType(.name)
+                .submitLabel(.done)
+                .onSubmit { Task { await viewModel.saveWard() } }
+
+            if case .failed(let reason) = viewModel.addWardState {
+                if let reason {
+                    DSText(reason, style: .footnote, color: DSColor.destructive)
+                } else {
+                    DSText(style: .footnote, color: DSColor.destructive).localized("participantDetail.newWard.error")
+                }
+            }
+
+            Spacer(minLength: 0)
+
+            DSButton { Task { await viewModel.saveWard() } }
+                .localized("participantDetail.save")
+                .disabled(!viewModel.canSaveWard)
+        }
+        .dsSheet(isSaving: viewModel.addWardState == .saving)
         .presentationDetents([.medium, .large])
     }
 

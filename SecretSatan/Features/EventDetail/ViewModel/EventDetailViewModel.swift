@@ -12,6 +12,18 @@ final class EventDetailViewModel {
         case failed(String)
     }
 
+    /// Bottom sheets of EventDetail. The screen shows at most one at a time.
+    enum Sheet: Identifiable {
+        /// Edits the name of the event.
+        case editName
+        /// Picks the date of the event.
+        case editDate
+        /// "Nuevo participante": adds a participant.
+        case newParticipant
+
+        var id: Self { self }
+    }
+
     /// State of the change being saved from the name sheet or the date picker.
     enum EditState: Equatable {
         case idle
@@ -33,16 +45,13 @@ final class EventDetailViewModel {
     /// Data of the screen. Each use case result updates only its own field.
     private(set) var viewData = EventDetailViewData()
 
-    /// `true` while the sheet to edit the name is shown.
-    var isEditingName = false
+    /// Sheet shown on top of the screen, or `nil`. A single value, so two sheets are never shown at once.
+    var sheet: Sheet?
+
     /// Name typed in the sheet. Starts as the current name.
     var draftName = ""
-    /// `true` while the date picker is shown.
-    var isEditingDate = false
     /// Date chosen in the picker. Starts as the current date, or today when the event has none.
     var draftDate = Date()
-    /// `true` while the "Nuevo participante" sheet is shown.
-    var isAddingParticipant = false
     /// Name typed in the "Nuevo participante" sheet. Required.
     var participantName = ""
     /// Phone typed in the "Nuevo participante" sheet. Required.
@@ -82,9 +91,10 @@ final class EventDetailViewModel {
     // MARK: - Name
 
     func startEditingName() {
+        guard sheet == nil else { return }
         draftName = viewData.event?.name ?? ""
         editState = .idle
-        isEditingName = true
+        sheet = .editName
     }
 
     /// `true` when the typed name is not empty, differs from the current one and nothing is being saved.
@@ -96,16 +106,17 @@ final class EventDetailViewModel {
     func saveName() async {
         guard canSaveName, let newName = trimmedDraftName else { return }
         if await save(.name(newName)) {
-            isEditingName = false
+            sheet = nil
         }
     }
 
     // MARK: - Date
 
     func startEditingDate() {
+        guard sheet == nil else { return }
         draftDate = viewData.event?.date ?? Date()
         editState = .idle
-        isEditingDate = true
+        sheet = .editDate
     }
 
     /// `true` when the picked day differs from the current date (or the event has none) and nothing is being saved.
@@ -119,17 +130,18 @@ final class EventDetailViewModel {
     func saveDate() async {
         guard canSaveDate else { return }
         if await save(.date(draftDate)) {
-            isEditingDate = false
+            sheet = nil
         }
     }
 
     // MARK: - New participant
 
     func startAddingParticipant() {
+        guard sheet == nil else { return }
         participantName = ""
         participantPhone = ""
         addParticipantState = .idle
-        isAddingParticipant = true
+        sheet = .newParticipant
     }
 
     /// `true` when the name and the phone are filled in and nothing is being saved.
@@ -144,7 +156,7 @@ final class EventDetailViewModel {
         do {
             viewData.participants.append(try await newParticipantUseCase.execute(input))
             addParticipantState = .idle
-            isAddingParticipant = false
+            sheet = nil
         } catch NewParticipantError.rejected(let reason) {
             addParticipantState = .failed(reason: reason)
         } catch {

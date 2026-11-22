@@ -33,9 +33,13 @@ struct EventDetailView: View {
                     .localized("eventDetail.addParticipant")
             }
         }
-        .sheet(isPresented: $viewModel.isEditingName) { nameSheet }
-        .sheet(isPresented: $viewModel.isEditingDate) { dateSheet }
-        .sheet(isPresented: $viewModel.isAddingParticipant) { participantSheet }
+        .sheet(item: $viewModel.sheet) { sheet in
+            switch sheet {
+            case .editName: nameSheet
+            case .editDate: dateSheet
+            case .newParticipant: participantSheet
+            }
+        }
         .alert(
             Text(forKey: "eventDetail.deleteError", value: "Couldn't remove the participant."),
             isPresented: $viewModel.deleteFailed
