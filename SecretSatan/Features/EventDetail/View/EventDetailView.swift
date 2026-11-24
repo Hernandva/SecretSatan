@@ -2,9 +2,10 @@ import SecretSatanUI
 import SwiftUI
 
 /// "Evento": the name and date of the event selected in Home, with a button to edit each, and its participants,
-/// whose "Añadir" button opens the "Nuevo participante" sheet.
+/// whose "Añadir" button opens the contacts sheet, and from it the "Nuevo participante" sheet.
 struct EventDetailView: View {
-    @State private var viewModel: EventDetailViewModel
+    @State var viewModel: EventDetailViewModel
+    @Environment(\.openURL) var openURL
 
     /// Receives only the container and resolves the view model from it.
     init(dependencies: EventDetailDependencies) {
@@ -37,6 +38,7 @@ struct EventDetailView: View {
             case .editName: nameSheet
             case .editDate: dateSheet
             case .newParticipant: participantSheet
+            case .contacts: contactsSheet
             }
         }
         .alert(

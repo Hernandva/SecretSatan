@@ -20,6 +20,8 @@ final class EventDetailViewModel {
         case editDate
         /// "Nuevo participante": adds a participant.
         case newParticipant
+        /// Phone contacts of the device, to pick several and add them as participants.
+        case contacts
 
         var id: Self { self }
     }
@@ -39,6 +41,16 @@ final class EventDetailViewModel {
         case failed(reason: String?)
     }
 
+    /// State of the phone contacts shown in the contacts sheet.
+    enum ContactsState: Equatable {
+        case idle
+        case loading
+        case loaded
+        /// The user has not allowed access to the contacts.
+        case denied
+        case failed
+    }
+
     /// State of the draw started with "Sortear".
     enum DrawState: Equatable {
         case idle
@@ -52,6 +64,9 @@ final class EventDetailViewModel {
     private(set) var editState: EditState = .idle
     private(set) var addParticipantState: AddParticipantState = .idle
     private(set) var drawState: DrawState = .idle
+    private(set) var contactsState: ContactsState = .idle
+    /// State of the contacts being added from the contacts sheet.
+    private(set) var addContactsState: AddParticipantState = .idle
     /// Data of the screen. Each use case result updates only its own field.
     private(set) var viewData = EventDetailViewData()
 
@@ -66,6 +81,10 @@ final class EventDetailViewModel {
     var participantName = ""
     /// Phone typed in the "Nuevo participante" sheet. Required.
     var participantPhone = ""
+    /// Text typed in the search bar of the contacts sheet.
+    var contactsQuery = ""
+    /// Contacts picked in the contacts sheet, added as participants with "Añadir".
+    private(set) var selectedContactIds: Set<String> = []
     /// `true` after removing a participant fails, so the view shows an alert. The view sets it back to `false`.
     var deleteFailed = false
     /// The backend's message when it refused to remove the participant, or `nil` for any other failure.
@@ -83,6 +102,7 @@ final class EventDetailViewModel {
     private let newParticipantUseCase: any NewParticipantUseCaseProtocol
     private let deleteParticipantUseCase: any DeleteParticipantUseCaseProtocol
     private let drawEventUseCase: any DrawEventUseCaseProtocol
+    private let phoneContactsUseCase: any PhoneContactsUseCaseProtocol
 
     /// Receives only the container and resolves what it needs from it.
     init(dependencies: EventDetailDependencies) {
@@ -92,6 +112,7 @@ final class EventDetailViewModel {
         self.newParticipantUseCase = dependencies.resolveNewParticipantUseCase()
         self.deleteParticipantUseCase = dependencies.resolveDeleteParticipantUseCase()
         self.drawEventUseCase = dependencies.resolveDrawEventUseCase()
+        self.phoneContactsUseCase = dependencies.resolvePhoneContactsUseCase()
     }
 
     /// Shows the event passed in by Home right away, then loads its participants.
@@ -159,8 +180,19 @@ final class EventDetailViewModel {
         !isDrawn
     }
 
+    /// "Añadir": opens the contacts sheet. "Añadir otros" in it opens the "Nuevo participante" sheet.
     func startAddingParticipant() {
         guard sheet == nil, canChangeParticipants else { return }
+        contactsQuery = ""
+        selectedContactIds = []
+        addContactsState = .idle
+        sheet = .contacts
+    }
+
+    /// "Añadir otros": closes the contacts sheet and opens the "Nuevo participante" sheet, to type someone who is not
+    /// in the contacts.
+    func startAddingOtherParticipant() {
+        guard sheet == .contacts, canChangeParticipants, addContactsState != .saving else { return }
         participantName = ""
         participantPhone = ""
         addParticipantState = .idle
@@ -180,11 +212,63 @@ final class EventDetailViewModel {
             viewData.participants.append(try await newParticipantUseCase.execute(input))
             addParticipantState = .idle
             sheet = nil
-        } catch NewParticipantError.rejected(let reason) {
-            addParticipantState = .failed(reason: reason)
         } catch {
-            addParticipantState = .failed(reason: nil)
+            addParticipantState = .failed(reason: Self.rejectionReason(of: error))
         }
+    }
+
+    // MARK: - Contacts
+
+    /// Contacts the sheet lists: those that are not participants yet and match the search bar.
+    var visibleContacts: [EventDetailViewData.Contact] {
+        viewData.contacts(matching: contactsQuery)
+    }
+
+    /// Loads the phone contacts the first time the contacts sheet opens. Asks for access to them if needed.
+    func loadContacts() async {
+        guard contactsState != .loading, contactsState != .loaded else { return }
+        contactsState = .loading
+        do {
+            viewData.contacts = try await phoneContactsUseCase.execute()
+            contactsState = .loaded
+        } catch PhoneContactsError.accessDenied {
+            contactsState = .denied
+        } catch {
+            contactsState = .failed
+        }
+    }
+
+    /// Picks the contact, or unpicks it when it was picked.
+    func toggleContact(_ contact: EventDetailViewData.Contact) {
+        guard addContactsState != .saving else { return }
+        if selectedContactIds.remove(contact.id) == nil {
+            selectedContactIds.insert(contact.id)
+        }
+    }
+
+    /// `true` when at least one contact is picked and nothing is being saved.
+    var canAddContacts: Bool {
+        canChangeParticipants && !selectedContactIds.isEmpty && addContactsState != .saving
+    }
+
+    /// Adds the picked contacts one by one, appends each to the list and closes the sheet. If one fails, it stops:
+    /// the ones added leave the selection and the rest stay picked to try again.
+    func addSelectedContacts() async {
+        guard canAddContacts else { return }
+        addContactsState = .saving
+        let picked = viewData.contacts.filter { selectedContactIds.contains($0.id) }
+        for contact in picked {
+            do {
+                let input = NewParticipantInput(name: contact.name, phone: contact.phone)
+                viewData.participants.append(try await newParticipantUseCase.execute(input))
+                selectedContactIds.remove(contact.id)
+            } catch {
+                addContactsState = .failed(reason: Self.rejectionReason(of: error))
+                return
+            }
+        }
+        addContactsState = .idle
+        sheet = nil
     }
 
     // MARK: - Delete participant
@@ -262,6 +346,12 @@ final class EventDetailViewModel {
 }
 
 private extension EventDetailViewModel {
+    /// The backend's message when it refused a new participant, or `nil` for any other failure.
+    static func rejectionReason(of error: any Error) -> String? {
+        guard case NewParticipantError.rejected(let reason) = error else { return nil }
+        return reason
+    }
+
     /// `text` without surrounding spaces, or `nil` when it is empty.
     static func trimmed(_ text: String) -> String? {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)

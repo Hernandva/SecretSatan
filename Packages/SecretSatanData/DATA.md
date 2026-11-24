@@ -134,6 +134,14 @@ Their storage lives in `Local/` and uses one technology, chosen when the reposit
   `<Name>Repository(inMemory: true)` is for previews and tests.
 - A missing field should read as its default, so adding a field keeps the rest of the saved data.
 
+### Device data read through a system framework
+
+`Contacts` reads the phone contacts of the device and never stores anything, so it has no request protocol or
+request DAO. It was generated as a local repository and its storage replaced by `Local/ContactsStore.swift`, the
+internal `ContactsStoreProtocol` over `CNContactStore`. Its public API is `fetchContacts()`, which asks for access
+the first time and throws `ContactsError.accessDenied` when the user refuses it. The app declares
+`NSContactsUsageDescription` in `project.yml`.
+
 ## Consuming a repository from a feature
 
 `<Feature>Dependencies` holds `<Name>RepositoryProtocol` and hands it out with `resolveRepository()`. `<Feature>UseCase`
@@ -158,4 +166,5 @@ python3 scripts/codegen/new_repo.py --name <RepositoryName> --type local --stora
 | `Events` | Remote (Bearer session of `Auth`) | — | `EventsRepositoryProtocol` | `Sources/SecretSatanData/Repositories/Events` |
 | `Participants` | Remote (Bearer session of `Auth`) | — | `ParticipantsRepositoryProtocol` | `Sources/SecretSatanData/Repositories/Participants` |
 | `Exclusions` | Remote (Bearer session of `Auth`) | — | `ExclusionsRepositoryProtocol` | `Sources/SecretSatanData/Repositories/Exclusions` |
+| `Contacts` | Local (read only) | Contacts framework (device contacts) | `ContactsRepositoryProtocol` | `Sources/SecretSatanData/Repositories/Contacts` |
 <!-- codegen:repository-registry:end -->

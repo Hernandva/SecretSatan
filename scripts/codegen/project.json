@@ -25,6 +25,10 @@
     "Exclusions": {
       "type": "remote",
       "storage": null
+    },
+    "Contacts": {
+      "type": "local",
+      "storage": "contacts"
     }
   }
 }

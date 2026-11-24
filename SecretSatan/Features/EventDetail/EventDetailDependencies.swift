@@ -9,15 +9,18 @@ final class EventDetailDependencies {
     private let event: EventDetailViewData.Event
     private let repository: any EventsRepositoryProtocol
     private let participantsRepository: any ParticipantsRepositoryProtocol
+    private let contactsRepository: any ContactsRepositoryProtocol
 
     init(
         event: EventDetailViewData.Event,
         repository: any EventsRepositoryProtocol = EventsRepository(),
-        participantsRepository: any ParticipantsRepositoryProtocol = ParticipantsRepository()
+        participantsRepository: any ParticipantsRepositoryProtocol = ParticipantsRepository(),
+        contactsRepository: any ContactsRepositoryProtocol = ContactsRepository()
     ) {
         self.event = event
         self.repository = repository
         self.participantsRepository = participantsRepository
+        self.contactsRepository = contactsRepository
     }
 
     func resolveEvent() -> EventDetailViewData.Event {
@@ -30,6 +33,10 @@ final class EventDetailDependencies {
 
     func resolveParticipantsRepository() -> any ParticipantsRepositoryProtocol {
         participantsRepository
+    }
+
+    func resolveContactsRepository() -> any ContactsRepositoryProtocol {
+        contactsRepository
     }
 
     func resolveUseCase() -> any EventDetailUseCaseProtocol {
@@ -46,6 +53,10 @@ final class EventDetailDependencies {
 
     func resolveNewParticipantUseCase() -> any NewParticipantUseCaseProtocol {
         NewParticipantUseCase(dependencies: self)
+    }
+
+    func resolvePhoneContactsUseCase() -> any PhoneContactsUseCaseProtocol {
+        PhoneContactsUseCase(dependencies: self)
     }
 
     func resolveDeleteParticipantUseCase() -> any DeleteParticipantUseCaseProtocol {

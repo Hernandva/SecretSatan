@@ -31,6 +31,8 @@ targets:
       properties:
         # Read by AppConfiguration. The value comes from Configs/Config.xcconfig.
         APIBaseURL: $(API_BASE_URL)
+        # Read by the Contacts repository. Localised in Resources/InfoPlist.xcstrings.
+        NSContactsUsageDescription: "Secret Satan shows your contacts so you can add them as participants of an event."
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
     entitlements:

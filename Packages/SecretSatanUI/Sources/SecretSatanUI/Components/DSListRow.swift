@@ -7,6 +7,8 @@ import SwiftUI
 /// headline / subheadline type, as in the event list.
 /// With `initials` (and no `icon`), it shows them on a round avatar, as in the participant list.
 /// Both leading views are 40 pt, so rows with either line up with `iconSeparatorInset`.
+/// With `isSelected`, it shows a trailing check circle, filled with the primary color while selected, as in a list
+/// where several rows can be picked.
 public struct DSListRow: View, DSLocalizableText {
     /// Side of the icon tile.
     static let iconSide: CGFloat = 40
@@ -20,19 +22,22 @@ public struct DSListRow: View, DSLocalizableText {
     private let icon: String?
     private let initials: String?
     private let showsChevron: Bool
+    private let isSelected: Bool?
 
     public init(
         _ text: String = "",
         subtitle: String? = nil,
         icon: String? = nil,
         initials: String? = nil,
-        showsChevron: Bool = false
+        showsChevron: Bool = false,
+        isSelected: Bool? = nil
     ) {
         self.text = text
         self.subtitle = subtitle
         self.icon = icon
         self.initials = initials
         self.showsChevron = showsChevron
+        self.isSelected = isSelected
     }
 
     /// `true` when the row has a leading icon tile or avatar.
@@ -58,6 +63,9 @@ public struct DSListRow: View, DSLocalizableText {
                 }
             }
             Spacer(minLength: 0)
+            if let isSelected {
+                selectionMark(isSelected: isSelected)
+            }
             if showsChevron {
                 Image(systemName: "chevron.right")
                     .foregroundStyle(DSColor.textSecondary)
@@ -69,6 +77,7 @@ public struct DSListRow: View, DSLocalizableText {
         .frame(minHeight: DSSpacing.tapMin)
         .background(DSColor.surface)
         .contentShape(Rectangle())
+        .accessibilityAddTraits(isSelected == true ? .isSelected : [])
     }
 
     /// Icon rows are taller (68 pt), as in the event list; avatar rows are 56 pt, as in the participant list.
@@ -79,6 +88,13 @@ public struct DSListRow: View, DSLocalizableText {
 }
 
 private extension DSListRow {
+    func selectionMark(isSelected: Bool) -> some View {
+        Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+            .font(DSFont.headline)
+            .foregroundStyle(isSelected ? DSColor.accent : DSColor.textSecondary)
+            .accessibilityHidden(true)
+    }
+
     func avatar(initials: String) -> some View {
         Text(initials)
             .font(DSTypeScale.subheadline.weight(.semibold))
@@ -107,5 +123,7 @@ private extension DSListRow {
         DSListRow("Privacy", showsChevron: true)
         DSListRow("Family 2026", subtitle: "6 participants", icon: "gift", showsChevron: true)
         DSListRow("Lucía Martín", initials: "LM")
+        DSListRow("Pablo Ruiz", subtitle: "600 000 001", initials: "PR", isSelected: true)
+        DSListRow("Ana Gómez", subtitle: "600 000 002", initials: "AG", isSelected: false)
     }
 }

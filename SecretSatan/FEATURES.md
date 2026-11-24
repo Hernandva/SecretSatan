@@ -186,7 +186,7 @@ adds the route to the parent coordinator and updates this file.
 |---|---|---|
 | `Login` | — (root) | — |
 | `Home` | Login | `AuthRepository`, `EventsRepository` |
-| `EventDetail` | Home | `EventsRepository`, `ParticipantsRepository` |
+| `EventDetail` | Home | `EventsRepository`, `ParticipantsRepository`, `ContactsRepository` |
 | `ParticipantDetail` | EventDetail | `ParticipantsRepository`, `EventsRepository`, `ExclusionsRepository` |
 <!-- codegen:feature-registry:end -->
 
