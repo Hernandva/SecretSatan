@@ -37,6 +37,7 @@ struct EventDetailView: View {
             switch sheet {
             case .editName: nameSheet
             case .editDate: dateSheet
+            case .editMessage: messageSheet
             case .newParticipant: participantSheet
             case .contacts: contactsSheet
             }
@@ -181,6 +182,28 @@ struct EventDetailView: View {
         .presentationDetents([.large])
     }
 
+    /// Sheet with the current message in a multi-line field. "Guardar" turns active once the message changes;
+    /// saving it empty removes the message.
+    private var messageSheet: some View {
+        VStack(alignment: .leading, spacing: DSSpacing.medium) {
+            DSText(style: .title).localized("eventDetail.editMessage.title")
+
+            DSTextView(value: $viewModel.draftMessage)
+                .localized("eventDetail.editMessage.placeholder")
+                .disabled(viewModel.editState == .saving)
+
+            editError
+
+            Spacer(minLength: 0)
+
+            DSButton { Task { await viewModel.saveMessage() } }
+                .localized("eventDetail.save")
+                .disabled(!viewModel.canSaveMessage)
+        }
+        .dsSheet(isSaving: viewModel.editState == .saving)
+        .presentationDetents([.medium, .large])
+    }
+
     /// "Nuevo participante" sheet: name and phone, both required. "Guardar" turns active once both are filled in,
     /// adds the participant and closes the sheet.
     private var participantSheet: some View {
@@ -224,7 +247,8 @@ struct EventDetailView: View {
 }
 
 private extension EventDetailView {
-    /// Name of the event and, below it, its date ("24 de diciembre de 2026"), each with its edit button.
+    /// Name of the event and, below it, its date ("24 de diciembre de 2026") and its message, each with its edit
+    /// button.
     func header(for event: EventDetailViewData.Event) -> some View {
         VStack(alignment: .leading, spacing: DSSpacing.small) {
             HStack(spacing: DSSpacing.space3) {
@@ -245,6 +269,18 @@ private extension EventDetailView {
                     .localized("eventDetail.edit")
                     .accessibilityLabel(Text(forKey: "eventDetail.editDate", value: "Edit date"))
             }
+            HStack(spacing: DSSpacing.space3) {
+                if let message = event.message {
+                    DSText(message, style: .body, color: DSColor.textSecondary)
+                        .lineLimit(3)
+                } else {
+                    DSText(style: .body, color: DSColor.textSecondary).localized("eventDetail.noMessage")
+                }
+                Spacer(minLength: 0)
+                DSButton(style: .secondary, size: .compact) { viewModel.startEditingMessage() }
+                    .localized("eventDetail.edit")
+                    .accessibilityLabel(Text(forKey: "eventDetail.editMessage", value: "Edit message"))
+            }
         }
     }
 
@@ -263,6 +299,7 @@ private extension EventDetailView {
         id: "preview",
         name: "Family 2026",
         date: .now,
+        message: "Bring something handmade.",
         participantCount: 6,
         isDrawn: false
     )

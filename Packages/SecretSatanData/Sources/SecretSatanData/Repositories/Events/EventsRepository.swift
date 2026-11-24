@@ -16,7 +16,8 @@ public protocol EventsRepositoryProtocol: Sendable {
     /// `GET /events/:id`: the event with its participants and exclusions. Never the draw's assignments.
     func fetchEvent(id: String) async throws -> any EventDetailResponseProtocol
 
-    /// `PATCH /events/:id`: changes the name, the date or both, and returns the updated event.
+    /// `PATCH /events/:id`: changes the name, the date, the message or several of them, and returns the updated
+    /// event.
     /// Only what `request` changes is sent; the rest of the event stays as it was.
     /// Throws `EventsError.nothingToUpdate`, before any request, when `request` changes nothing.
     @discardableResult

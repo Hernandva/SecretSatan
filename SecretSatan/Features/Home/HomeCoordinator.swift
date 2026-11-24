@@ -31,6 +31,7 @@ final class HomeCoordinator: Coordinator {
                 id: event.id,
                 name: event.name,
                 date: event.date,
+                message: event.message,
                 participantCount: event.participantCount,
                 isDrawn: event.isDrawn
             )

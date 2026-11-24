@@ -81,7 +81,8 @@ the id, and any action after it, to its URL.
 
 A `PATCH` sends only what changes. When a field can also be cleared with `null` (as the date of
 `updateEvent(id:_:)`), an optional can't tell "keep it" from "remove it": give it its own enum
-(`EventDateUpdate`: `unchanged`, `set`, `remove`) and encode `remove` with `encodeNil`.
+(`EventDateUpdate`: `unchanged`, `set`, `remove`) and encode `remove` with `encodeNil`. The message of an event does
+the same with `EventMessageUpdate`.
 
 The backend base URL is not written in the package: the app sets `API_BASE_URL` in `Configs/Config.xcconfig`,
 `project.yml` copies it to the `APIBaseURL` key of its Info.plist, and every repository reads it with

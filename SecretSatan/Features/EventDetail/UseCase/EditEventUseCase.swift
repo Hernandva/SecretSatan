@@ -5,6 +5,8 @@ import SecretSatanData
 enum EditEventChange: Equatable, Sendable {
     case name(String)
     case date(Date)
+    /// New message, or `nil` to remove it.
+    case message(String?)
 }
 
 protocol EditEventUseCaseProtocol: Sendable {
@@ -12,12 +14,13 @@ protocol EditEventUseCaseProtocol: Sendable {
     func execute(_ change: EditEventChange) async throws -> EventDetailViewData.Event
 }
 
-/// Changes the name or the date of the event through the Events repository (`PATCH /events/:id`) and returns
+/// Changes the name, the date or the message of the event through the Events repository (`PATCH /events/:id`) and returns
 /// only the data the screen shows, mapped out of the SecretSatanData types.
 struct EditEventUseCase: EditEventUseCaseProtocol {
     private struct Request: EventsUpdateRequestProtocol {
         var name: String?
         var date: EventDateUpdate = .unchanged
+        var message: EventMessageUpdate = .unchanged
     }
 
     private let repository: any EventsRepositoryProtocol
@@ -37,6 +40,7 @@ struct EditEventUseCase: EditEventUseCaseProtocol {
             id: response.id,
             name: response.name,
             date: response.date,
+            message: response.message,
             participantCount: response.participantCount,
             isDrawn: response.status == .drawn
         )
@@ -51,6 +55,10 @@ private extension EditEventUseCase {
             Request(name: name)
         case .date(let date):
             Request(date: .set(date))
+        case .message(let message?):
+            Request(message: .set(message))
+        case .message(nil):
+            Request(message: .remove)
         }
     }
 }

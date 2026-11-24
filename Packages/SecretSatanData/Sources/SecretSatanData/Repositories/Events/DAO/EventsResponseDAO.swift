@@ -1,7 +1,8 @@
 import Foundation
 
 /// One event of `GET /events`, the response of `POST /events` and the `event` of the detail:
-/// `{ id, name, date, budget, status, participantCount }`, with `date` and `budget` as `null` when not set.
+/// `{ id, name, date, budget, message, status, participantCount }`, with `date`, `budget` and `message` as `null`
+/// (or missing) when not set.
 /// Internal to SecretSatanData: the app only sees EventsResponseProtocol.
 struct EventsResponseDAO: Decodable, Equatable, Sendable, EventsResponseProtocol {
     private enum CodingKeys: String, CodingKey {
@@ -9,6 +10,7 @@ struct EventsResponseDAO: Decodable, Equatable, Sendable, EventsResponseProtocol
         case name
         case date
         case budget
+        case message
         case status
         case participantCount
     }
@@ -17,6 +19,7 @@ struct EventsResponseDAO: Decodable, Equatable, Sendable, EventsResponseProtocol
     let name: String
     let date: Date?
     let budget: Decimal?
+    let message: String?
     let status: EventStatus
     let participantCount: Int
 
@@ -25,6 +28,7 @@ struct EventsResponseDAO: Decodable, Equatable, Sendable, EventsResponseProtocol
         id = try container.decode(String.self, forKey: .id)
         name = try container.decode(String.self, forKey: .name)
         budget = try container.decodeIfPresent(Decimal.self, forKey: .budget)
+        message = try container.decodeIfPresent(String.self, forKey: .message)
         status = try container.decode(EventStatus.self, forKey: .status)
         participantCount = try container.decode(Int.self, forKey: .participantCount)
         date = try Self.decodeDate(from: container, forKey: .date)

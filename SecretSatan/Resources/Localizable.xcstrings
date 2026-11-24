@@ -515,6 +515,57 @@
         }
       }
     },
+    "eventDetail.editMessage" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edit message"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Editar mensaje"
+          }
+        }
+      }
+    },
+    "eventDetail.editMessage.placeholder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Write a message for the participants"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escribe un mensaje para los participantes"
+          }
+        }
+      }
+    },
+    "eventDetail.editMessage.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Message"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mensaje"
+          }
+        }
+      }
+    },
     "eventDetail.editName" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -681,6 +732,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sin fecha"
+          }
+        }
+      }
+    },
+    "eventDetail.noMessage" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No message"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sin mensaje"
           }
         }
       }

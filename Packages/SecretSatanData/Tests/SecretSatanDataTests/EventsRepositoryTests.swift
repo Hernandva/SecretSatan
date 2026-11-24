@@ -9,11 +9,13 @@ struct EventsRepositoryTests {
         let name: String
         var date: Date?
         var budget: Decimal?
+        var message: String?
     }
 
     private struct UpdateRequest: EventsUpdateRequestProtocol {
         var name: String?
         var date: EventDateUpdate = .unchanged
+        var message: EventMessageUpdate = .unchanged
     }
 
     private static let updatedEvent = """
@@ -77,6 +79,31 @@ struct EventsRepositoryTests {
         #expect(body?["budget"] as? Int == 30)
         #expect(body?.keys.contains("date") == false)
         #expect(event.status == .draft)
+    }
+
+    @Test func createsAnEventWithAMessage() async throws {
+        Self.stub(status: 200, body: """
+        {"id":"E1","name":"Navidad","date":null,"budget":null,"message":"¡Feliz Navidad!","status":"draft",
+         "participantCount":0}
+        """)
+
+        let event = try await Self.repository().createEvent(CreateRequest(name: "Navidad", message: "¡Feliz Navidad!"))
+
+        let body = try Self.sentBody()
+        #expect(body?["message"] as? String == "¡Feliz Navidad!")
+        #expect(event.message == "¡Feliz Navidad!")
+    }
+
+    @Test func readsAMissingMessageAsNil() async throws {
+        Self.stub(status: 200, body: """
+        {"id":"E1","name":"Navidad","date":null,"budget":null,"status":"draft","participantCount":0}
+        """)
+
+        let event = try await Self.repository().createEvent(CreateRequest(name: "Navidad"))
+
+        let body = try Self.sentBody()
+        #expect(body?.keys.contains("message") == false)
+        #expect(event.message == nil)
     }
 
     @Test func sendsTheDateAsISO8601() async throws {
@@ -169,6 +196,26 @@ struct EventsRepositoryTests {
         #expect(body?.keys.sorted() == ["date"])
         #expect(body?["date"] is NSNull)
         #expect(event.date == nil)
+    }
+
+    @Test func updatesOnlyTheMessage() async throws {
+        Self.stub(status: 200, body: Self.updatedEvent)
+
+        try await Self.repository().updateEvent(id: "E1", UpdateRequest(message: .set("Traed algo hecho a mano")))
+
+        let body = try Self.sentBody()
+        #expect(body?.keys.sorted() == ["message"])
+        #expect(body?["message"] as? String == "Traed algo hecho a mano")
+    }
+
+    @Test func removesTheMessageWithNull() async throws {
+        Self.stub(status: 200, body: Self.updatedEvent)
+
+        try await Self.repository().updateEvent(id: "E1", UpdateRequest(message: .remove))
+
+        let body = try Self.sentBody()
+        #expect(body?.keys.sorted() == ["message"])
+        #expect(body?["message"] is NSNull)
     }
 
     @Test func sendsNothingWhenTheUpdateChangesNothing() async {

@@ -15,6 +15,8 @@ struct HomeViewData: Equatable, Sendable {
         let name: String
         /// Day of the event, or `nil` when it has none.
         let date: Date?
+        /// Message of the organiser for the participants, or `nil` when it has none.
+        let message: String?
         let participantCount: Int
         /// `true` once the draw has been made.
         let isDrawn: Bool

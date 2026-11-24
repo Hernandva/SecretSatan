@@ -16,6 +16,8 @@ public protocol EventsResponseProtocol: Sendable {
     var date: Date? { get }
     /// Spending limit of each gift, or `nil` when it is not set.
     var budget: Decimal? { get }
+    /// Message of the organiser for the participants, or `nil` when it is not set.
+    var message: String? { get }
     var status: EventStatus { get }
     var participantCount: Int { get }
 }

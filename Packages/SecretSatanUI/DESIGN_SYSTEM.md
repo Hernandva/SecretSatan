@@ -34,6 +34,7 @@ Custom fonts named in the tokens must be added to the app bundle (`.ttf`/`.otf`)
 | `DSButton(_:style:size:icon:action:)` | Actions: pill. Styles: `.primary`, `.secondary`, `.outline`, `.destructive`. Sizes: `.regular` (full width, 50 pt, the default) and `.compact` (as wide as its text, 44 pt, e.g. "Editar" beside a title or a field). Dimmed while `.disabled(true)`. Optional leading `icon`: `.symbol("apple.logo")` (SF Symbol) or `.glyph("G")`. |
 | `DSLinkButton(_:value:style:icon:)` | `DSButton` that pushes a screen with `NavigationLink(value:)`. Same pill, styles and icons. Use it for buttons that open a route. |
 | `DSTextField(_:value:)` | Text input. The first parameter is the placeholder. |
+| `DSTextView(_:value:lineLimit:)` | Multi-line text input, e.g. a message. The first parameter is the placeholder. Shows 4 lines and grows up to `lineLimit` (10 by default), then scrolls. |
 | `DSSearchField(_:query:)` | Search input with a magnifying glass and a clear button. The first parameter is the placeholder. |
 | `DSDatePicker(_:date:placeholder:)` | Date input with a label. The date is optional: while it is `nil` it shows `placeholder` (already localised) as a button; tapping it picks today and shows the compact picker. |
 | `DSToggle(_:isOn:)` | Switch with a label. |

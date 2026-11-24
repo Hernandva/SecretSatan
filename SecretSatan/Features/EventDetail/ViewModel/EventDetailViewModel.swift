@@ -4,59 +4,6 @@ import Observation
 @MainActor
 @Observable
 final class EventDetailViewModel {
-    enum State: Equatable {
-        case idle
-        /// `viewData.event` is already set; the participants are loading.
-        case loading
-        case loaded
-        case failed(String)
-    }
-
-    /// Bottom sheets of EventDetail. The screen shows at most one at a time.
-    enum Sheet: Identifiable {
-        /// Edits the name of the event.
-        case editName
-        /// Picks the date of the event.
-        case editDate
-        /// "Nuevo participante": adds a participant.
-        case newParticipant
-        /// Phone contacts of the device, to pick several and add them as participants.
-        case contacts
-
-        var id: Self { self }
-    }
-
-    /// State of the change being saved from the name sheet or the date picker.
-    enum EditState: Equatable {
-        case idle
-        case saving
-        case failed(String)
-    }
-
-    /// State of the participant being saved from the "Nuevo participante" sheet.
-    enum AddParticipantState: Equatable {
-        case idle
-        case saving
-        /// `reason` is the backend's message when it refused the participant, or `nil` for any other failure.
-        case failed(reason: String?)
-    }
-
-    /// State of the phone contacts shown in the contacts sheet.
-    enum ContactsState: Equatable {
-        case idle
-        case loading
-        case loaded
-        /// The user has not allowed access to the contacts.
-        case denied
-        case failed
-    }
-
-    /// State of the draw started with "Sortear".
-    enum DrawState: Equatable {
-        case idle
-        case drawing
-    }
-
     /// Fewest participants an event needs before it can be drawn.
     static let minimumParticipantsToDraw = 3
 
@@ -77,6 +24,8 @@ final class EventDetailViewModel {
     var draftName = ""
     /// Date chosen in the picker. Starts as the current date, or today when the event has none.
     var draftDate = Date()
+    /// Message typed in the message sheet. Starts as the current message, or empty when the event has none.
+    var draftMessage = ""
     /// Name typed in the "Nuevo participante" sheet. Required.
     var participantName = ""
     /// Phone typed in the "Nuevo participante" sheet. Required.
@@ -169,6 +118,30 @@ final class EventDetailViewModel {
     func saveDate() async {
         guard canSaveDate else { return }
         if await save(.date(draftDate)) {
+            sheet = nil
+        }
+    }
+
+    // MARK: - Message
+
+    func startEditingMessage() {
+        guard sheet == nil else { return }
+        draftMessage = viewData.event?.message ?? ""
+        editState = .idle
+        sheet = .editMessage
+    }
+
+    /// `true` when the typed message differs from the current one and nothing is being saved. Emptying it removes
+    /// the message, so that is a change too when the event has one.
+    var canSaveMessage: Bool {
+        guard editState != .saving else { return false }
+        return Self.trimmed(draftMessage) != viewData.event?.message
+    }
+
+    /// Saves the typed message, or removes it when it is empty, and closes the sheet.
+    func saveMessage() async {
+        guard canSaveMessage else { return }
+        if await save(.message(Self.trimmed(draftMessage))) {
             sheet = nil
         }
     }
