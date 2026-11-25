@@ -59,3 +59,34 @@ xcodegen generate                      # creates SecretSatan.xcodeproj from proj
 open SecretSatan.xcodeproj
 (cd Packages/SecretSatanData && swift test)  # package tests
 ```
+
+## Keeping the new-project-ios skill in sync
+
+This project was created with the `new-project-ios` skill, and the user wants every new project to start with the
+conventions this one ends up with.
+
+**When to ask.** When a change alters how the project is configured or how something must be done, ask the user
+whether the `new-project-ios` skill should be updated with it. Ask once, when the change is done, in a short
+question that names the change. This covers changes to:
+
+- the rules and conventions in `AGENTS.md`, `SecretSatan/FEATURES.md`, `Packages/SecretSatanData/DATA.md` or
+  `Packages/SecretSatanUI/DESIGN_SYSTEM.md` (code style, architecture, naming, navigation, localisation…);
+- `.swiftlint.yml`, `.gitignore`, `project.yml` settings that every project needs, or `scripts/lint.sh`;
+- the generators and templates in `scripts/codegen/`, or the project skills in `.claude/skills/`;
+- the shared code of the packages (`Core/`, the `SecretSatanUI` components and localisation).
+
+Do not ask for changes that only make sense in this app: its features, repositories, endpoints, design tokens,
+assets, texts or the registries in the docs.
+
+**If the user says yes**, update the skill with the `skill-creator` skill:
+
+1. Start from the current `new-project-ios` skill, never from an older copy.
+2. Generalise the change before copying it: replace `SecretSatan` with the `__PROJECT__` placeholder,
+   `SecretSatanData` with `__DATA_MODULE__`, `SecretSatanUI` with `__UI_MODULE__` and
+   `secretsatan` with `__PROJECT_SLUG__`, and leave out anything specific to this app.
+3. Apply it to the matching files of the skill's `template/` (hidden files are stored as `dot-<name>`), and to its
+   `SKILL.md` or `scripts/create_project.py` when the change affects them.
+4. Generate a test project with the updated skill and check that the change comes out as expected.
+5. Package the skill and give it to the user to save. Tell them what changed.
+
+If the user says no, do nothing else.
